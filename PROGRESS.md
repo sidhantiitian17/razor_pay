@@ -9,7 +9,7 @@ Holdout burns: none
 
 | Phase | Owner | Status | Checks | Branch | Commit | Tag | Date |
 |-------|-------|--------|--------|--------|--------|-----|------|
-| P0 | CC | in_progress | 0.1-0.13 PASS | phase/P0-contracts | d0a8511 | - | 2026-08-24 |
+| P0 | CC | complete | 0.1-0.13 PASS | phase/P0-contracts | 25eb362 | p0-complete | 2026-08-24 |
 | P1 | CC | not_started | - | - | - | - | - |
 | P2 | CC | not_started | - | - | - | - | - |
 | P3 | CC | not_started | - | - | - | - | - |
