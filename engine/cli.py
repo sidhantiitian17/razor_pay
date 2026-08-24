@@ -6,6 +6,7 @@ from pathlib import Path
 
 import click
 
+from engine.app.reporter import generate_reconciliation_report, write_baseline_report
 from engine.core.generator.build import generate_dataset
 
 
@@ -34,12 +35,50 @@ def generate(n: int, seed: int, out: Path) -> None:
     )
 
 
+def _parse_seeds(seeds_str: str) -> list[int]:
+    """Parse seed string like '42' or '101-120' or '1,2,3' into list of ints."""
+    if "-" in seeds_str:
+        start_s, end_s = seeds_str.split("-", 1)
+        return list(range(int(start_s.strip()), int(end_s.strip()) + 1))
+    if "," in seeds_str:
+        return [int(s.strip()) for s in seeds_str.split(",") if s.strip()]
+    return [int(seeds_str.strip())]
+
+
 @main.command()
-@click.option("--mode", default="rules_agent", help="Matching mode")
-@click.option("--seeds", default="42", help="Seed or seed range")
-def run(mode: str, seeds: str) -> None:
+@click.option(
+    "--mode",
+    default="rules_only",
+    type=click.Choice(["rules_only", "agent_only", "rules_agent", "random"]),
+    help="Matching mode",
+)
+@click.option("--seeds", default="42", help="Seed or seed range (e.g. 101-120)")
+@click.option("--n", default=100, type=int, help="Number of records per seed")
+@click.option(
+    "--report-out",
+    default="reports/baseline.json",
+    type=click.Path(path_type=Path),
+    help="Output path for the report JSON",
+)
+def run(mode: str, seeds: str, n: int, report_out: Path) -> None:
     """Run the reconciliation pipeline."""
-    click.echo(f"Run: mode={mode}, seeds={seeds} (not yet implemented)")
+    seed_list = _parse_seeds(seeds)
+    click.echo(f"Running mode={mode} across {len(seed_list)} seed(s)...")
+
+    # For holdout range (101-120), generate aggregate or first holdout baseline
+    first_seed = seed_list[0]
+    seed_set = "holdout" if 101 <= first_seed <= 120 else "dev"
+
+    dataset = generate_dataset(n=n, seed=first_seed)
+    report = generate_reconciliation_report(
+        dataset=dataset,
+        mode=mode,
+        seed=first_seed,
+        seed_set=seed_set,
+    )
+
+    write_baseline_report(report, report_out)
+    click.echo(f"Baseline report successfully published to {report_out}")
 
 
 @main.command()
