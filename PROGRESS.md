@@ -13,7 +13,7 @@ Holdout burns: none
 | P0 | CC | complete | 0.1-0.13 PASS | phase/P0-contracts | 25eb362 | p0-complete | 2026-08-24 |
 | P1 | CC | complete | 1.1-1.11 PASS | phase/P1-generator | 8303f6a | p1-complete | 2026-08-24 |
 | P2 | CC | complete | 2.1-2.10 PASS | phase/P2-matcher | e4d11b6 | p2-complete | 2026-08-25 |
-| P3 | CC | in_progress | 3.1-3.13 PASS | phase/P3-agent-guardrail | c1bc1a7 | - | 2026-08-25 |
+| P3 | CC | complete | 3.1-3.13 PASS | phase/P3-agent-guardrail | 1a5c098 | p3-complete | 2026-08-25 |
 | P4 | CC | not_started | - | - | - | - | - |
 | P5 | CC | not_started | - | - | - | - | - |
 | P6 | CC | not_started | - | - | - | - | - |
