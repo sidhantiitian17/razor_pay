@@ -45,6 +45,26 @@ def _parse_seeds(seeds_str: str) -> list[int]:
     return [int(seeds_str.strip())]
 
 
+def _classify_seed_set(seed: int) -> str:
+    """Classify a seed per the frozen protocol.
+
+    IMPLEMENTATION_PLAN.md §4.4: dev = 1-10 (tuning only), holdout = 101-120
+    (the only reported claim), regression = 42 (golden snapshot only). Any
+    other seed is rejected rather than silently mislabeled -- a seed outside
+    all three declared ranges has no defined seed_set to report under.
+    """
+    if seed == 42:
+        return "regression"
+    if 1 <= seed <= 10:
+        return "dev"
+    if 101 <= seed <= 120:
+        return "holdout"
+    raise click.BadParameter(
+        f"seed {seed} is outside all declared seed sets "
+        "(dev 1-10, holdout 101-120, regression 42) -- see IMPLEMENTATION_PLAN.md §4.4"
+    )
+
+
 @main.command()
 @click.option(
     "--mode",
@@ -67,7 +87,7 @@ def run(mode: str, seeds: str, n: int, report_out: Path) -> None:
 
     # For holdout range (101-120), generate aggregate or first holdout baseline
     first_seed = seed_list[0]
-    seed_set = "holdout" if 101 <= first_seed <= 120 else "dev"
+    seed_set = _classify_seed_set(first_seed)
 
     dataset = generate_dataset(n=n, seed=first_seed)
     report = generate_reconciliation_report(
