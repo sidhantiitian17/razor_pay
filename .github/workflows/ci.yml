@@ -26,11 +26,16 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
+      # Scoped to engine/tests explicitly — an unscoped `ruff check`/`ruff
+      # format` also walks Markdown code fences and would try to reformat
+      # PLAN.md/PLAN_REVIEW.md/IMPLEMENTATION_PLAN.md/END_TO_END.md, which
+      # END_TO_END.md §3 declares frozen or human-only. Never let a linter
+      # touch those.
       - name: Ruff check
-        run: uv run ruff check
+        run: uv run ruff check engine tests
 
       - name: Ruff format check
-        run: uv run ruff format --check
+        run: uv run ruff format --check engine tests
 
       - name: Mypy strict (engine)
         run: uv run mypy --strict engine
@@ -38,8 +43,14 @@ jobs:
       - name: Import linter
         run: uv run lint-imports
 
+      # No --cov-fail-under here: the 85% overall / 95% safety-critical bar
+      # is check 13.1 in IMPLEMENTATION_PLAN.md §7 (P13, hardening) —
+      # enforcing it generically from P0 would fail every PR through P12,
+      # since coverage climbs as each phase's modules land. Coverage is
+      # still measured and visible in every run; scripts/checks/P13.sh
+      # owns the actual gate.
       - name: Tests with coverage
-        run: uv run pytest --cov=engine --cov-fail-under=85
+        run: uv run pytest --cov=engine
 
       - name: Run all check scripts
         run: bash scripts/checks/all.sh

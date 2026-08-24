@@ -44,6 +44,17 @@ packages = ["engine"]
 target-version = "py311"
 line-length = 100
 src = ["engine", "tests"]
+# Defense in depth alongside CI's explicit `ruff check engine tests` scoping:
+# ruff also lints/formats Python fenced code blocks inside Markdown. These
+# docs are frozen or human-only per END_TO_END.md §3 document graph — never
+# let a linter rewrite them, even if a future invocation forgets to scope
+# its paths.
+extend-exclude = [
+    "PLAN.md",
+    "PLAN_REVIEW.md",
+    "IMPLEMENTATION_PLAN.md",
+    "END_TO_END.md",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "D", "UP", "B", "SIM", "TCH", "RUF"]
