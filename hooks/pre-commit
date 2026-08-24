@@ -15,6 +15,21 @@ if [ -n "$staged_py" ]; then
   uv run mypy --strict engine/core || fails=$((fails+1))
 fi
 
+staged_ui=$(git diff --cached --name-only --diff-filter=ACM -- 'ui/*.ts' 'ui/*.tsx')
+
+if [ -n "$staged_ui" ]; then
+  BUN_BIN="${BUN_BIN:-bun}"
+  if command -v "$BUN_BIN" >/dev/null 2>&1; then
+    echo "-- tsc --noEmit (ui/) --"
+    (cd ui && "$BUN_BIN" x tsc --noEmit) || fails=$((fails+1))
+
+    echo "-- eslint (ui/) --"
+    (cd ui && "$BUN_BIN" run lint) || fails=$((fails+1))
+  else
+    echo "WARNING: bun not on PATH — set BUN_BIN to its full path. Not blocking this commit, but CI's tsc/lint steps will still gate the push."
+  fi
+fi
+
 echo "-- gitleaks (staged) --"
 GITLEAKS_BIN="${GITLEAKS_BIN:-gitleaks}"
 if command -v "$GITLEAKS_BIN" >/dev/null 2>&1; then
