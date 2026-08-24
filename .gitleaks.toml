@@ -17,4 +17,8 @@ paths = [
   '''cassettes/''',
   '''data/''',
   '''uv\.lock''',
+  # Supabase publishable/anon key — safe to expose client-side by design
+  # (gated by RLS, not a secret), but still gitignored, never committed.
+  '''(^|/)UI-main/\.env$''',
+  '''(^|/)ui/\.env$''',
 ]

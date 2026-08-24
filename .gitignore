@@ -10,3 +10,15 @@ reports/*.json
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+
+# ui/ (TanStack Start) build/dep artifacts
+ui/node_modules/
+ui/dist/
+ui/dist-ssr/
+ui/.output/
+ui/.vinxi/
+ui/.nitro/
+
+# The user's raw Lovable download, kept locally as a reference/backup —
+# its content is mirrored into ui/, never tracked here directly.
+/UI-main/

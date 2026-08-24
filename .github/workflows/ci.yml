@@ -79,7 +79,33 @@ jobs:
         with:
           node-version: "20"
 
-      - name: TypeScript check (UI types)
+      # Regenerate report.d.ts from the frozen schema and diff against the
+      # committed copy — if they differ, someone edited report.d.ts by hand
+      # or the schema changed without regenerating types (§0 P0 exit gate:
+      # any schema change requires a regenerated report.d.ts in the same
+      # commit).
+      - name: Report types match frozen schema
         run: |
-          npx json-schema-to-typescript contracts/report.schema.json --output ui/src/types/report.d.ts
-          cd ui && npx tsc --noEmit || true
+          npx json-schema-to-typescript contracts/report.schema.json --output /tmp/report.d.ts
+          diff ui/src/types/report.d.ts /tmp/report.d.ts
+
+      - name: Set up bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # ui/ has its own lockfile (bun.lock, from Lovable's default stack) —
+      # install before tsc/lint, and no `|| true`. A UI check that can never
+      # fail is theatre (END_TO_END.md §8, the Verify page rule applies
+      # equally to CI itself).
+      - name: Install UI dependencies
+        working-directory: ui
+        run: bun install --frozen-lockfile
+
+      - name: TypeScript check (UI)
+        working-directory: ui
+        run: bun x tsc --noEmit
+
+      - name: Lint UI
+        working-directory: ui
+        run: bun run lint
