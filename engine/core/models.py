@@ -75,6 +75,9 @@ class ExceptionBucket(enum.StrEnum):
     PARTIAL_GROUP = "partial_group"
 
 
+UnresolvedBucket = ExceptionBucket
+
+
 class CohortName(enum.StrEnum):
     """Generator cohort names (§3.5)."""
 

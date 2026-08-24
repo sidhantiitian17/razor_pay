@@ -2,6 +2,18 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P4] — Classifier and Closer — 2026-08-25
+
+### Added
+- `engine/core/classify.py` — deterministic 9-bucket exception classifier with audit-grade evidence strings referencing real field values (I13), contextual proposed actions, and strict pure core isolation importing no LLMs (checks 4.1–4.5, R6, D1).
+- `engine/app/closer.py` — idempotent closure engine with `--dry-run` simulation (check 4.7), exact state reversal restoring all before states (I14, check 4.8), strict exclusion of open exception rows (I15, check 4.9), second-pass convergence (check 4.10), and balanced zero-sum adjustment journals (check 4.11, R2).
+- `scripts/checks/P4.sh` — automated verification runner for checks 4.1 through 4.11.
+- `tests/test_classify.py`, `tests/test_closer.py` — comprehensive test suites covering determinism, reachability, evidence, idempotence, dry-run, reversal, and invariants.
+
+### Verified
+- **Checks:** 4.1–4.11 PASS (11/11). `uv run pytest tests/ -q`: 118/118 passed (82% overall, 97% on closer, 91% on classify). `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean. `lint-imports`: Core purity kept. `gitleaks detect --no-git`: 0 findings.
+- **Exit gate:** 4.8 (exact reversal I14), 4.9 (only resolved rows closed I15), and 4.10 (second-pass convergence) verified.
+
 ## [P3] — Agent Loop, Guardrail, Replay — 2026-08-25
 
 ### Added

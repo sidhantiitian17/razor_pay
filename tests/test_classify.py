@@ -82,11 +82,12 @@ def test_bucket_reachability() -> None:
         payout_ids=[],  # missing payout -> partial
         ledger_ids=[],
         confidence=0.5,
-        source="rules",
+        source="deterministic",
         fields_matched=[],
         tolerances_used=[],
-        tag=None,
+        tag=ResolvedTag.CLEAN,
         reason="Incomplete group",
+        agent_turns=0,
     )
     partial_exceptions = classifier.classify(
         bank_txns=dataset.bank_txns,
