@@ -312,3 +312,23 @@ DROP POLICY IF EXISTS service_all_run_requests ON run_requests;
 CREATE POLICY service_all_run_requests ON run_requests FOR ALL TO service_role USING (true) WITH CHECK (true);
 
 -- anon has NO write path on any table (verified by check 0.7 / 6.6)
+
+-- ============================================================
+-- Realtime (P11 Eval Lab: live status on submitted run_requests)
+-- ============================================================
+-- supabase_realtime publishes no tables by default. Without this, a
+-- postgres_changes subscription on run_requests connects but never
+-- fires. Realtime respects RLS, so an unauthenticated session still
+-- receives nothing -- this does not widen the SELECT policy above it.
+ALTER TABLE public.run_requests REPLICA IDENTITY FULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime'
+          AND schemaname = 'public'
+          AND tablename = 'run_requests'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.run_requests;
+    END IF;
+END $$;
