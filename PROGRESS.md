@@ -14,7 +14,7 @@ Holdout burns: none
 | P1 | CC | complete | 1.1-1.11 PASS | phase/P1-generator | 8303f6a | p1-complete | 2026-08-24 |
 | P2 | CC | complete | 2.1-2.10 PASS | phase/P2-matcher | e4d11b6 | p2-complete | 2026-08-25 |
 | P3 | CC | complete | 3.1-3.13 PASS | phase/P3-agent-guardrail | 1a5c098 | p3-complete | 2026-08-25 |
-| P4 | CC | in_progress | 4.1-4.11 PASS | phase/P4-classify-close | - | - | 2026-08-25 |
+| P4 | CC | in_progress | 4.1-4.11 PASS | phase/P4-classify-close | e7d1830 | - | 2026-08-25 |
 | P5 | CC | not_started | - | - | - | - | - |
 | P6 | CC | not_started | - | - | - | - | - |
 | P7 | CC | complete | 7.1 (tsc) PASS, 7.7 (no service_role) PASS, 7.2-7.6/7.8 (Playwright, tests_ui/) 11/11 PASS | phase/P7-shell | fda2461 | p7-complete | 2026-08-25 |
