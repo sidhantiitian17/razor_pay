@@ -1,5 +1,5 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
-import { Activity, FlaskConical, ListTree, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Activity, FlaskConical, Gauge, ListTree, ShieldCheck, TriangleAlert } from "lucide-react";
 import type { ComponentType } from "react";
 
 type NavRoute = {
@@ -11,6 +11,8 @@ type NavRoute = {
 
 const ROUTES: NavRoute[] = [
   { to: "/", label: "Runs", icon: ListTree, exact: true },
+  { to: "/dashboard", label: "Run Dashboard", icon: Gauge, exact: false },
+
   { to: "/exceptions", label: "Exceptions", icon: TriangleAlert, exact: false },
   { to: "/agent-trace", label: "Agent Trace", icon: Activity, exact: false },
   { to: "/eval-lab", label: "Eval Lab", icon: FlaskConical, exact: false },
