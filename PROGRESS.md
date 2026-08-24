@@ -14,7 +14,7 @@ Holdout burns: none
 | P1 | CC | complete | 1.1-1.11 PASS | phase/P1-generator | 8303f6a | p1-complete | 2026-08-24 |
 | P2 | CC | complete | 2.1-2.10 PASS | phase/P2-matcher | e4d11b6 | p2-complete | 2026-08-25 |
 | P3 | CC | complete | 3.1-3.13 PASS | phase/P3-agent-guardrail | 1a5c098 | p3-complete | 2026-08-25 |
-| P4 | CC | in_progress | 4.1-4.11 PASS | phase/P4-classify-close | e7d1830 | - | 2026-08-25 |
+| P4 | CC | complete | 4.1-4.11 PASS | phase/P4-classify-close | a8c8632 | p4-complete | 2026-08-25 |
 | P5 | CC | not_started | - | - | - | - | - |
 | P6 | CC | not_started | - | - | - | - | - |
 | P7 | CC | complete-with-caveat | 7.1 (tsc) PASS, 7.7 (no service_role) PASS, 7.2-7.6/7.8 (Playwright, tests_ui/) 8/11 PASS -- 3 known-red (7.8 responsive 375px, 7.3 loading state role, 7.5 theme contrast) against real Track B bugs; Lovable applied+verified fixes in its cloud project, not yet synced into this repo (awaiting user's UI-main download) | phase/P7-shell | fda2461 | p7-complete | 2026-08-25 |
