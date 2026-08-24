@@ -267,6 +267,8 @@ CREATE POLICY auth_select_eval_sweeps ON eval_sweeps FOR SELECT TO authenticated
 DROP POLICY IF EXISTS auth_select_control_results ON control_results;
 CREATE POLICY auth_select_control_results ON control_results FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS auth_select_run_requests ON run_requests;
+CREATE POLICY auth_select_run_requests ON run_requests FOR SELECT TO authenticated USING (true);
 DROP POLICY IF EXISTS auth_insert_run_requests ON run_requests;
 CREATE POLICY auth_insert_run_requests ON run_requests FOR INSERT TO authenticated
     WITH CHECK (true);
