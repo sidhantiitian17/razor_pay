@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sidhantiitian17/razor_pay/contracts/report.schema.json",
+  "title": "Reconciliation Report",
+  "description": "Track 04 AI Finance Controller — report contract. Frozen at P0.",
+  "type": "object",
+  "required": [
+    "run_id", "engine_version", "schema_version", "config",
+    "candidate_space", "throughput", "cost", "accuracy",
+    "ablation", "resolved", "unresolved", "exceptions",
+    "closures", "guardrail", "controls"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string", "format": "uuid" },
+    "engine_version": { "type": "string" },
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "config": { "$ref": "#/$defs/Config" },
+    "candidate_space": { "$ref": "#/$defs/CandidateSpace" },
+    "throughput": { "$ref": "#/$defs/Throughput" },
+    "cost": { "$ref": "#/$defs/Cost" },
+    "accuracy": { "$ref": "#/$defs/Accuracy" },
+    "ablation": { "$ref": "#/$defs/Ablation" },
+    "resolved": { "$ref": "#/$defs/ResolvedMap" },
+    "unresolved": { "$ref": "#/$defs/UnresolvedMap" },
+    "exceptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ExceptionEntry" }
+    },
+    "closures": { "$ref": "#/$defs/Closures" },
+    "guardrail": { "$ref": "#/$defs/Guardrail" },
+    "controls": { "$ref": "#/$defs/Controls" }
+  },
+  "$defs": {
+    "MetricValue": {
+      "type": "object",
+      "required": ["value", "numerator", "denominator"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "number" },
+        "numerator": { "type": "number" },
+        "denominator": { "type": "number" }
+      }
+    },
+    "MeasurementMode": {
+      "type": "string",
+      "enum": ["live", "replay"]
+    },
+    "SeedSet": {
+      "type": "string",
+      "enum": ["dev", "holdout", "regression"]
+    },
+    "Config": {
+      "type": "object",
+      "required": ["seed", "seed_set", "n", "mode", "model", "temperature", "prompt_hash",
+                    "max_turns", "concurrency", "tolerances", "guardrail"],
+      "additionalProperties": false,
+      "properties": {
+        "seed": { "type": "integer" },
+        "seed_set": { "$ref": "#/$defs/SeedSet" },
+        "n": { "type": "integer", "minimum": 50 },
+        "mode": {
+          "type": "string",
+          "enum": ["rules_only", "agent_only", "rules_agent", "random"]
+        },
+        "model": { "type": "string" },
+        "temperature": { "type": "number" },
+        "prompt_hash": { "type": "string", "pattern": "^sha256:" },
+        "max_turns": { "type": "integer", "minimum": 1 },
+        "concurrency": { "type": "integer", "minimum": 1 },
+        "tolerances": {
+          "type": "object",
+          "required": ["drift_paise", "skew_days", "pct_delta"],
+          "additionalProperties": false,
+          "properties": {
+            "drift_paise": { "type": "integer" },
+            "skew_days": { "type": "integer" },
+            "pct_delta": { "type": "number" }
+          }
+        },
+        "guardrail": {
+          "type": "object",
+          "required": ["min_confidence", "min_fields"],
+          "additionalProperties": false,
+          "properties": {
+            "min_confidence": { "type": "number" },
+            "min_fields": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "CandidateSpace": {
+      "type": "object",
+      "required": ["size", "blocker_recall"],
+      "additionalProperties": false,
+      "properties": {
+        "size": { "type": "integer" },
+        "blocker_recall": { "$ref": "#/$defs/MetricValue" }
+      }
+    },
+    "Throughput": {
+      "type": "object",
+      "required": [
+        "measurement_mode", "runs_measured", "wall_clock_seconds_median",
+        "rows_total", "rows_per_second_end_to_end",
+        "residuals_per_second_agent_path", "stage_seconds",
+        "llm_calls", "llm_retries", "llm_p50_ms", "llm_p95_ms", "agent_turns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "measurement_mode": { "$ref": "#/$defs/MeasurementMode" },
+        "runs_measured": { "type": "integer" },
+        "wall_clock_seconds_median": { "type": "number" },
+        "rows_total": { "type": "integer" },
+        "rows_per_second_end_to_end": { "$ref": "#/$defs/MetricValue" },
+        "residuals_per_second_agent_path": { "$ref": "#/$defs/MetricValue" },
+        "stage_seconds": {
+          "type": "object",
+          "required": ["generate", "block", "match", "agent", "guardrail",
+                       "classify", "close", "grade", "report"],
+          "additionalProperties": false,
+          "properties": {
+            "generate": { "type": "number" },
+            "block": { "type": "number" },
+            "match": { "type": "number" },
+            "agent": { "type": "number" },
+            "guardrail": { "type": "number" },
+            "classify": { "type": "number" },
+            "close": { "type": "number" },
+            "grade": { "type": "number" },
+            "report": { "type": "number" }
+          }
+        },
+        "llm_calls": { "type": "integer" },
+        "llm_retries": { "type": "integer" },
+        "llm_p50_ms": { "type": "number" },
+        "llm_p95_ms": { "type": "number" },
+        "agent_turns": {
+          "type": "object",
+          "required": ["mean", "max", "single_turn_fraction"],
+          "additionalProperties": false,
+          "properties": {
+            "mean": { "type": "number" },
+            "max": { "type": "integer" },
+            "single_turn_fraction": { "type": "number" }
+          }
+        }
+      }
+    },
+    "Cost": {
+      "type": "object",
+      "required": ["tokens_in", "tokens_out", "cache_hit_rate",
+                    "cost_usd", "cost_per_100_rows_usd", "pricing_last_verified"],
+      "additionalProperties": false,
+      "properties": {
+        "tokens_in": { "type": "integer" },
+        "tokens_out": { "type": "integer" },
+        "cache_hit_rate": { "type": "number" },
+        "cost_usd": { "type": "number" },
+        "cost_per_100_rows_usd": { "type": "number" },
+        "pricing_last_verified": { "type": "string", "format": "date" }
+      }
+    },
+    "LinkMetrics": {
+      "type": "object",
+      "required": ["tp", "fp", "fn", "tn", "precision", "recall", "f1"],
+      "additionalProperties": false,
+      "properties": {
+        "tp": { "type": "integer" },
+        "fp": { "type": "integer" },
+        "fn": { "type": "integer" },
+        "tn": { "type": "integer" },
+        "precision": { "$ref": "#/$defs/MetricValue" },
+        "recall": { "$ref": "#/$defs/MetricValue" },
+        "f1": { "type": "number" }
+      }
+    },
+    "Accuracy": {
+      "type": "object",
+      "required": ["match_rate", "resolved_rate", "unresolved_rate", "links"],
+      "additionalProperties": false,
+      "properties": {
+        "match_rate": { "$ref": "#/$defs/MetricValue" },
+        "resolved_rate": { "$ref": "#/$defs/MetricValue" },
+        "unresolved_rate": { "$ref": "#/$defs/MetricValue" },
+        "links": {
+          "type": "object",
+          "required": ["bank_payout", "payout_ledger"],
+          "additionalProperties": false,
+          "properties": {
+            "bank_payout": { "$ref": "#/$defs/LinkMetrics" },
+            "payout_ledger": { "$ref": "#/$defs/LinkMetrics" }
+          }
+        }
+      }
+    },
+    "AblationArm": {
+      "type": "object",
+      "required": ["match_rate", "precision", "cost_usd"],
+      "additionalProperties": false,
+      "properties": {
+        "match_rate": { "type": "number" },
+        "precision": { "type": "number" },
+        "cost_usd": { "type": "number" }
+      }
+    },
+    "Ablation": {
+      "type": "object",
+      "required": ["rules_only", "agent_only", "rules_agent", "random",
+                    "agent_lift", "precision_cost"],
+      "additionalProperties": false,
+      "properties": {
+        "rules_only": { "$ref": "#/$defs/AblationArm" },
+        "agent_only": { "$ref": "#/$defs/AblationArm" },
+        "rules_agent": { "$ref": "#/$defs/AblationArm" },
+        "random": { "$ref": "#/$defs/AblationArm" },
+        "agent_lift": { "$ref": "#/$defs/MetricValue" },
+        "precision_cost": { "type": "number" }
+      }
+    },
+    "ResolvedMap": {
+      "type": "object",
+      "required": ["clean", "drift", "timing_tolerated", "utr_recovered", "refund"],
+      "additionalProperties": false,
+      "properties": {
+        "clean": { "type": "integer" },
+        "drift": { "type": "integer" },
+        "timing_tolerated": { "type": "integer" },
+        "utr_recovered": { "type": "integer" },
+        "refund": { "type": "integer" }
+      }
+    },
+    "UnresolvedMap": {
+      "type": "object",
+      "required": [
+        "amount_mismatch", "fee_mismatch", "timing_break", "missing_utr",
+        "duplicate", "refund_unpaired", "orphan_bank", "orphan_ledger", "partial_group"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "amount_mismatch": { "type": "integer" },
+        "fee_mismatch": { "type": "integer" },
+        "timing_break": { "type": "integer" },
+        "missing_utr": { "type": "integer" },
+        "duplicate": { "type": "integer" },
+        "refund_unpaired": { "type": "integer" },
+        "orphan_bank": { "type": "integer" },
+        "orphan_ledger": { "type": "integer" },
+        "partial_group": { "type": "integer" }
+      }
+    },
+    "ExceptionEntry": {
+      "type": "object",
+      "required": ["exception_id", "row_ids", "bucket", "severity",
+                    "evidence", "proposed_action", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "exception_id": { "type": "string" },
+        "row_ids": { "type": "array", "items": { "type": "string" } },
+        "bucket": {
+          "type": "string",
+          "enum": [
+            "amount_mismatch", "fee_mismatch", "timing_break", "missing_utr",
+            "duplicate", "refund_unpaired", "orphan_bank", "orphan_ledger", "partial_group"
+          ]
+        },
+        "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2
+        },
+        "proposed_action": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["open", "assigned", "resolved", "wont_fix"]
+        },
+        "assignee": { "type": ["string", "null"] },
+        "resolution_note": { "type": ["string", "null"] }
+      }
+    },
+    "Closures": {
+      "type": "object",
+      "required": ["applied", "dry_run", "reversible",
+                    "second_pass_new_closures", "closure_rate"],
+      "additionalProperties": false,
+      "properties": {
+        "applied": { "type": "integer" },
+        "dry_run": { "type": "boolean" },
+        "reversible": { "type": "boolean" },
+        "second_pass_new_closures": { "type": "integer" },
+        "closure_rate": { "$ref": "#/$defs/MetricValue" }
+      }
+    },
+    "Guardrail": {
+      "type": "object",
+      "required": ["proposals", "accepted", "rejected", "reject_reasons"],
+      "additionalProperties": false,
+      "properties": {
+        "proposals": { "type": "integer" },
+        "accepted": { "type": "integer" },
+        "rejected": { "type": "integer" },
+        "reject_reasons": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        }
+      }
+    },
+    "Controls": {
+      "type": "object",
+      "required": [
+        "shuffled_truth", "null_agent", "random_matcher",
+        "poisoned_prompt", "inverted_rule", "disabled_dedup"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "shuffled_truth": {
+          "type": "object",
+          "required": ["passed", "observed_match_rate"],
+          "additionalProperties": false,
+          "properties": {
+            "passed": { "type": "boolean" },
+            "observed_match_rate": { "type": "number" }
+          }
+        },
+        "null_agent": {
+          "type": "object",
+          "required": ["passed", "identical_to_rules_only"],
+          "additionalProperties": false,
+          "properties": {
+            "passed": { "type": "boolean" },
+            "identical_to_rules_only": { "type": "boolean" }
+          }
+        },
+        "random_matcher": {
+          "type": "object",
+          "required": ["passed", "observed_precision"],
+          "additionalProperties": false,
+          "properties": {
+            "passed": { "type": "boolean" },
+            "observed_precision": { "type": "number" }
+          }
+        },
+        "poisoned_prompt": {
+          "type": "object",
+          "required": ["passed", "leak_detector_fired"],
+          "additionalProperties": false,
+          "properties": {
+            "passed": { "type": "boolean" },
+            "leak_detector_fired": { "type": "boolean" }
+          }
+        },
+        "inverted_rule": {
+          "type": "object",
+          "required": ["passed", "tests_failed"],
+          "additionalProperties": false,
+          "properties": {
+            "passed": { "type": "boolean" },
+            "tests_failed": { "type": "integer" }
+          }
+        },
+        "disabled_dedup": {
+          "type": "object",
+          "required": ["passed", "duplicate_bucket_size"],
+          "additionalProperties": false,
+          "properties": {
+            "passed": { "type": "boolean" },
+            "duplicate_bucket_size": { "type": "integer" }
+          }
+        }
+      }
+    }
+  }
+}

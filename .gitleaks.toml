@@ -1,0 +1,20 @@
+title = "razor_pay gitleaks config"
+
+# gitleaks --no-git scans the whole filesystem tree regardless of .gitignore.
+# Exclude vendored/generated directories that are never committed (see
+# .gitignore) so the push gate (END_TO_END.md §9.4) checks real source, not
+# third-party license text and build output.
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''\.venv/''',
+  '''node_modules/''',
+  '''\.git/''',
+  '''__pycache__/''',
+  '''\.pytest_cache/''',
+  '''cassettes/''',
+  '''data/''',
+  '''uv\.lock''',
+]

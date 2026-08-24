@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "phase/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  # gitleaks-action lists PR commits via the GitHub API on pull_request
+  # events (GET /pulls/{n}/commits) — without this it 403s as "Resource
+  # not accessible by integration" and the whole job fails, even though
+  # gitleaks itself found nothing (confirmed separately, CLI, both here
+  # and via GitGuardian's own check).
+  pull-requests: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 — gitleaks-action runs `git log <parent>..<head>` over
+      # the PR's commit range; the default shallow (depth-1) checkout doesn't
+      # have that parent commit and the range fails to resolve.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      # Scoped to engine/tests explicitly — an unscoped `ruff check`/`ruff
+      # format` also walks Markdown code fences and would try to reformat
+      # PLAN.md/PLAN_REVIEW.md/IMPLEMENTATION_PLAN.md/END_TO_END.md, which
+      # END_TO_END.md §3 declares frozen or human-only. Never let a linter
+      # touch those.
+      - name: Ruff check
+        run: uv run ruff check engine tests
+
+      - name: Ruff format check
+        run: uv run ruff format --check engine tests
+
+      - name: Mypy strict (engine)
+        run: uv run mypy --strict engine
+
+      - name: Import linter
+        run: uv run lint-imports
+
+      # No --cov-fail-under here: the 85% overall / 95% safety-critical bar
+      # is check 13.1 in IMPLEMENTATION_PLAN.md §7 (P13, hardening) —
+      # enforcing it generically from P0 would fail every PR through P12,
+      # since coverage climbs as each phase's modules land. Coverage is
+      # still measured and visible in every run; scripts/checks/P13.sh
+      # owns the actual gate.
+      - name: Tests with coverage
+        run: uv run pytest --cov=engine
+
+      - name: Run all check scripts
+        run: bash scripts/checks/all.sh
+
+      - name: pip audit
+        run: uv run pip-audit
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: TypeScript check (UI types)
+        run: |
+          npx json-schema-to-typescript contracts/report.schema.json --output ui/src/types/report.d.ts
+          cd ui && npx tsc --noEmit || true
