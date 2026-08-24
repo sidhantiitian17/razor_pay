@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentTraceRouteImport } from './routes/agent-trace'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as EvalLabRouteImport } from './routes/eval-lab'
 import { Route as ExceptionsRouteImport } from './routes/exceptions'
 import { Route as VerifyRouteImport } from './routes/verify'
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgentTraceRoute = AgentTraceRouteImport.update({
   id: '/agent-trace',
   path: '/agent-trace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EvalLabRoute = EvalLabRouteImport.update({
@@ -44,6 +50,7 @@ const VerifyRoute = VerifyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent-trace': typeof AgentTraceRoute
+  '/dashboard': typeof DashboardRoute
   '/eval-lab': typeof EvalLabRoute
   '/exceptions': typeof ExceptionsRoute
   '/verify': typeof VerifyRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent-trace': typeof AgentTraceRoute
+  '/dashboard': typeof DashboardRoute
   '/eval-lab': typeof EvalLabRoute
   '/exceptions': typeof ExceptionsRoute
   '/verify': typeof VerifyRoute
@@ -59,22 +67,42 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent-trace': typeof AgentTraceRoute
+  '/dashboard': typeof DashboardRoute
   '/eval-lab': typeof EvalLabRoute
   '/exceptions': typeof ExceptionsRoute
   '/verify': typeof VerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agent-trace' | '/eval-lab' | '/exceptions' | '/verify'
+  fullPaths:
+    | '/'
+    | '/agent-trace'
+    | '/dashboard'
+    | '/eval-lab'
+    | '/exceptions'
+    | '/verify'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agent-trace' | '/eval-lab' | '/exceptions' | '/verify'
+  to:
+    | '/'
+    | '/agent-trace'
+    | '/dashboard'
+    | '/eval-lab'
+    | '/exceptions'
+    | '/verify'
   id:
-    '__root__' | '/' | '/agent-trace' | '/eval-lab' | '/exceptions' | '/verify'
+    | '__root__'
+    | '/'
+    | '/agent-trace'
+    | '/dashboard'
+    | '/eval-lab'
+    | '/exceptions'
+    | '/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentTraceRoute: typeof AgentTraceRoute
+  DashboardRoute: typeof DashboardRoute
   EvalLabRoute: typeof EvalLabRoute
   ExceptionsRoute: typeof ExceptionsRoute
   VerifyRoute: typeof VerifyRoute
@@ -94,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/agent-trace'
       fullPath: '/agent-trace'
       preLoaderRoute: typeof AgentTraceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/eval-lab': {
@@ -123,6 +158,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentTraceRoute: AgentTraceRoute,
+  DashboardRoute: DashboardRoute,
   EvalLabRoute: EvalLabRoute,
   ExceptionsRoute: ExceptionsRoute,
   VerifyRoute: VerifyRoute,
