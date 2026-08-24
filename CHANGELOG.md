@@ -2,6 +2,21 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P3] — Agent Loop, Guardrail, Replay — 2026-08-25
+
+### Added
+- `engine/ports/llm.py` — protocol definitions for LLM client, structured request/response, token and dollar cost accounting (`UsageStats`).
+- `engine/ports/store.py`, `clock.py` — storage and UTC clock ports.
+- `engine/adapters/llm_replay.py` — deterministic cassette recorder and replay adapter with `BlockingTransportAsserter` guaranteeing zero network calls and stripped auth secrets (check 3.6, 3.10, ADR-001).
+- `engine/core/guardrail.py` — deterministic guardrail validator evaluating confidence, multi-field requirements, hallucinated IDs, amount delta, and timing skew (check 3.7, R8, D15).
+- `engine/app/agent.py` — bounded multi-turn tool loop with `AGENT_TOOLS_SCHEMA` (`fetch_candidates`, `inspect_record`, `propose_match`), typed errors (`FreeTextResponseError`, `TurnLimitExceededError`), prompt injection defense, and truth isolation I12 (checks 3.1–3.5, 3.9, 3.11–3.13).
+- `engine/eval/threshold.py` — threshold sweeper and PR curve evaluator over dev seeds saving `reports/threshold_sweep.json` (check 3.8, D15, §4.4).
+- `scripts/checks/P3.sh` — automated verification runner for checks 3.1 through 3.13.
+
+### Verified
+- **Checks:** 3.1–3.13 PASS (13/13). `uv run pytest tests/ -q`: 107/107 passed (80% overall, 98% on guardrail, 91% on agent). `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean. `lint-imports`: Core purity kept. `gitleaks detect --no-git`: 0 findings.
+- **Exit gate:** 3.4 (truth isolation I12), 3.6 (deterministic replay without network calls), and 3.11 (multi-turn loop) verified.
+
 ## [P2] — Blocker, Deterministic Matcher, Baseline — 2026-08-25
 
 ### Added

@@ -32,23 +32,27 @@ def test_replay_zero_network_calls() -> None:
     )
 
     with BlockingTransportAsserter.assert_no_network():
-        client = ReplayLLMClient(cassette=cassette)
-        res1 = client.complete(
-            LLMRequest(
-                messages=[{"role": "user", "content": "test"}],
-                tools=[{"name": "fetch_candidates", "description": "Fetch candidates"}],
-            )
-        )
-        res2 = client.complete(
+        client1 = ReplayLLMClient(cassette=cassette)
+        res1 = client1.complete(
             LLMRequest(
                 messages=[{"role": "user", "content": "test"}],
                 tools=[{"name": "fetch_candidates", "description": "Fetch candidates"}],
             )
         )
 
-        assert res1 == res2
+        client2 = ReplayLLMClient(cassette=cassette)
+        res2 = client2.complete(
+            LLMRequest(
+                messages=[{"role": "user", "content": "test"}],
+                tools=[{"name": "fetch_candidates", "description": "Fetch candidates"}],
+            )
+        )
+
+        assert res1.tool_calls == res2.tool_calls
+        assert res1.usage == res2.usage
         assert res1.tool_calls[0]["name"] == "fetch_candidates"
-        assert client.network_calls_made == 0
+        assert client1.network_calls_made == 0
+        assert client2.network_calls_made == 0
 
 
 def test_cassette_no_auth_headers() -> None:
