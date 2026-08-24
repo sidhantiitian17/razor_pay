@@ -8,6 +8,12 @@ on:
 
 permissions:
   contents: read
+  # gitleaks-action lists PR commits via the GitHub API on pull_request
+  # events (GET /pulls/{n}/commits) — without this it 403s as "Resource
+  # not accessible by integration" and the whole job fails, even though
+  # gitleaks itself found nothing (confirmed separately, CLI, both here
+  # and via GitGuardian's own check).
+  pull-requests: read
 
 jobs:
   check:
