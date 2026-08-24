@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "phase/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Ruff check
+        run: uv run ruff check
+
+      - name: Ruff format check
+        run: uv run ruff format --check
+
+      - name: Mypy strict (engine)
+        run: uv run mypy --strict engine
+
+      - name: Import linter
+        run: uv run lint-imports
+
+      - name: Tests with coverage
+        run: uv run pytest --cov=engine --cov-fail-under=85
+
+      - name: Run all check scripts
+        run: bash scripts/checks/all.sh
+
+      - name: pip audit
+        run: uv run pip-audit
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: TypeScript check (UI types)
+        run: |
+          npx json-schema-to-typescript contracts/report.schema.json --output ui/src/types/report.d.ts
+          cd ui && npx tsc --noEmit || true

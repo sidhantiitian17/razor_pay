@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Pre-commit gate — END_TO_END.md §9.1. Never bypass with --no-verify.
+# Installed via: git config core.hooksPath hooks
+set -uo pipefail
+export PYTHONUTF8=1
+fails=0
+
+staged_py=$(git diff --cached --name-only --diff-filter=ACM -- '*.py')
+
+if [ -n "$staged_py" ]; then
+  echo "-- ruff check (staged) --"
+  echo "$staged_py" | xargs uv run ruff check || fails=$((fails+1))
+
+  echo "-- mypy --strict (engine/core) --"
+  uv run mypy --strict engine/core || fails=$((fails+1))
+fi
+
+echo "-- gitleaks (staged) --"
+GITLEAKS_BIN="${GITLEAKS_BIN:-gitleaks}"
+if command -v "$GITLEAKS_BIN" >/dev/null 2>&1; then
+  "$GITLEAKS_BIN" protect --staged --no-banner || fails=$((fails+1))
+else
+  echo "WARNING: gitleaks not on PATH — set GITLEAKS_BIN to its full path. Not blocking this commit, but fix before the next push (§9.4 requires it there)."
+fi
+
+[ "$fails" -eq 0 ] || { echo "PRE-COMMIT FAILED: $fails check(s). Fix, do not --no-verify."; exit 1; }
+exit 0
