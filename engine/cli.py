@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import click
+
+from engine.core.generator.build import generate_dataset
 
 
 @click.group()
@@ -11,11 +15,23 @@ def main() -> None:
 
 
 @main.command()
-@click.option("--n", default=100, help="Number of records to generate")
-@click.option("--seed", default=42, help="Random seed")
-def generate(n: int, seed: int) -> None:
+@click.option("--n", default=100, type=int, help="Number of records to generate")
+@click.option("--seed", default=42, type=int, help="Random seed")
+@click.option(
+    "--out",
+    default="data",
+    type=click.Path(path_type=Path),
+    help="Output directory for generated CSVs",
+)
+def generate(n: int, seed: int, out: Path) -> None:
     """Generate synthetic reconciliation data."""
-    click.echo(f"Generate: n={n}, seed={seed} (not yet implemented)")
+    dataset = generate_dataset(n=n, seed=seed)
+    dataset.write_csvs(out)
+    click.echo(
+        f"Generated {len(dataset.bank_txns)} bank txns, "
+        f"{len(dataset.gateway_payouts)} payouts, "
+        f"{len(dataset.ledger_entries)} ledger entries in {out}"
+    )
 
 
 @main.command()

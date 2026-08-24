@@ -2,6 +2,21 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P1] — Generator, Journals, Ground Truth — 2026-08-24
+
+### Added
+- `engine/core/generator/allocate.py` — largest-remainder cohort allocator guaranteeing sum(counts) == n for all n >= 50 (D11).
+- `engine/core/generator/journals.py` — balanced journal construction (`make_settlement_journal`, `make_refund_reversal_journal`) satisfying zero-sum invariant I3.
+- `engine/core/generator/cohorts.py` — full suite of 13 registered cohort injectors and `COHORT_TERMINAL_MAP` covering all 5 resolved tags and 8 generated exception buckets.
+- `engine/core/generator/build.py` — `generate_dataset` orchestration, deterministic RNG with seed stability, partition verification (I5), cardinality verification (I8), truth links derivation (§4.1), and CSV/JSON export (`write_csvs`).
+- `engine/cli.py` — implemented `generate --n <n> --seed <seed> --out <dir>` sub-command.
+- `scripts/checks/P1.sh` — automated verification runner for checks 1.1 to 1.11.
+- `tests/test_allocate.py`, `tests/test_cohorts.py`, `tests/test_generator.py` — 15 unit tests covering checks 1.1–1.11.
+
+### Verified
+- **Checks:** 1.1–1.11 PASS (11/11). `uv run pytest tests/ -q`: 77/77 passed (85% coverage). `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean. `lint-imports`: 1 contract kept. `gitleaks detect --no-git`: 0 findings.
+- **Exit gate:** Truth partition (I5) and 1:1 cohort-to-terminal state mapping (I6) verified.
+
 ## [P0] — Contracts, Data Model, Decisions — 2026-08-24
 
 ### Added
