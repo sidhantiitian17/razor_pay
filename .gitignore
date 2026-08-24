@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+node_modules/
+data/
+reports/*.json
+!reports/golden_report.json
+.pytest_cache/
