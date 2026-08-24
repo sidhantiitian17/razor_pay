@@ -2,6 +2,22 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P2] — Blocker, Deterministic Matcher, Baseline — 2026-08-25
+
+### Added
+- `engine/core/matching/blocker.py` — candidate space blocker `C` construction and `evaluate_blocker_recall` achieving 1.0 recall across all seeds 1..20 while capping space size to `< n^2 / 4` (check 2.1, 2.2, §4.2).
+- `engine/core/matching/attribute.py` — 3-way outlier attribution logic for triads (bank, payout, ledger) mapping breaks to `AMOUNT_MISMATCH`, `FEE_MISMATCH`, and `PARTIAL_GROUP` (check 2.8, §3.4).
+- `engine/core/matching/rules.py` — deterministic rule stack for exact UTR matches, duplicate detection, narration UTR recovery, refund reversals, and residual exceptions (checks 2.3–2.7).
+- `engine/core/metrics.py` — reconciliation metrics engine calculating link confusion matrices, exact match rate, resolved/unresolved rates (I9, I10, I11, D5).
+- `engine/app/reporter.py` — report generator serializing to `contracts/report.schema.json` format.
+- `engine/cli.py` — implemented `run --mode rules_only --seeds 101-120` command publishing to `reports/baseline.json` (D7).
+- `scripts/checks/P2.sh` — automated verification runner for checks 2.1 through 2.10.
+- `reports/baseline.json` — baseline benchmark for rules-only arm on holdout seeds 101–120.
+
+### Verified
+- **Checks:** 2.1–2.10 PASS (10/10). `uv run pytest tests/ -q`: 90/90 passed (84% coverage). `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean. `lint-imports`: Core purity kept. `gitleaks detect --no-git`: 0 findings.
+- **Exit gate:** Blocker recall is 1.0 (nothing dropped downstream) and baseline report published to `reports/baseline.json`.
+
 ## [P1] — Generator, Journals, Ground Truth — 2026-08-24
 
 ### Added

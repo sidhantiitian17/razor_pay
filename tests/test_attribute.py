@@ -19,9 +19,12 @@ def _make_fixture(
     tax_paise: int,
     ledger_bank_paise: int,
     ledger_rec_paise: int,
+    ledger_fee_paise: int | None = None,
 ) -> tuple[BankTxn, GatewayPayout, list[LedgerEntry]]:
     dt = datetime(2026, 8, 1, 10, 0, 0, tzinfo=UTC)
     d = date(2026, 8, 1)
+
+    act_ledger_fee = fee_paise if ledger_fee_paise is None else ledger_fee_paise
 
     bank = BankTxn(
         bank_id="BNK-000001",
@@ -62,7 +65,7 @@ def _make_fixture(
             ledger_id="LED-000003",
             journal_id="JRN-000001",
             entry_date=d,
-            amount_paise=fee_paise,
+            amount_paise=act_ledger_fee,
             account="gateway_fees",
             reference=payout.payout_id,
         ),
@@ -128,7 +131,7 @@ def test_outlier_table_row3_amount_mismatch() -> None:
 
 def test_outlier_table_row4_fee_mismatch() -> None:
     """Row 4: A, A±d, A, agree -> fee_mismatch (payout fee outlier)."""
-    # Payout has fee perturbed so net is 97140 instead of 97640
+    # Payout has fee perturbed so net is 97140 instead of 97640, while ledger has true fee 2000
     bank, payout, ledgers = _make_fixture(
         bank_paise=97640,
         gross_paise=100000,
@@ -136,6 +139,7 @@ def test_outlier_table_row4_fee_mismatch() -> None:
         tax_paise=360,
         ledger_bank_paise=97640,
         ledger_rec_paise=100000,
+        ledger_fee_paise=2000,
     )
     verdict, tag, bucket = attribute_triad_outlier(bank, payout, ledgers)
     assert verdict == "unresolved"
