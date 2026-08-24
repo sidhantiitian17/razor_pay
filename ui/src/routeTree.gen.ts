@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentTraceRouteImport } from './routes/agent-trace'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as EvalLabRouteImport } from './routes/eval-lab'
 import { Route as ExceptionsRouteImport } from './routes/exceptions'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgentTraceRoute = AgentTraceRouteImport.update({
   id: '/agent-trace',
   path: '/agent-trace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -50,6 +56,7 @@ const VerifyRoute = VerifyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent-trace': typeof AgentTraceRoute
+  '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/eval-lab': typeof EvalLabRoute
   '/exceptions': typeof ExceptionsRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent-trace': typeof AgentTraceRoute
+  '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/eval-lab': typeof EvalLabRoute
   '/exceptions': typeof ExceptionsRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent-trace': typeof AgentTraceRoute
+  '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/eval-lab': typeof EvalLabRoute
   '/exceptions': typeof ExceptionsRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agent-trace'
+    | '/auth'
     | '/dashboard'
     | '/eval-lab'
     | '/exceptions'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agent-trace'
+    | '/auth'
     | '/dashboard'
     | '/eval-lab'
     | '/exceptions'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/agent-trace'
+    | '/auth'
     | '/dashboard'
     | '/eval-lab'
     | '/exceptions'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentTraceRoute: typeof AgentTraceRoute
+  AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   EvalLabRoute: typeof EvalLabRoute
   ExceptionsRoute: typeof ExceptionsRoute
@@ -122,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/agent-trace'
       fullPath: '/agent-trace'
       preLoaderRoute: typeof AgentTraceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentTraceRoute: AgentTraceRoute,
+  AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   EvalLabRoute: EvalLabRoute,
   ExceptionsRoute: ExceptionsRoute,

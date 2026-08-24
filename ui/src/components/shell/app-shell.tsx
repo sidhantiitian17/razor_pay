@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { ConnectionStatus } from "./connection-status";
 import { RunSelector } from "./run-selector";
+import { SessionBadge } from "./session-badge";
 import { SidebarNav } from "./sidebar-nav";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -14,6 +15,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <RunSelector />
           <div className="flex items-center gap-2">
             <ConnectionStatus />
+            <SessionBadge />
             <ThemeToggle />
           </div>
         </header>
