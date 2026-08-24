@@ -4,7 +4,7 @@ Repo: https://github.com/sidhantiitian17/razor_pay
 Lovable project id: 40d76d2d-38c3-4173-8e18-bcb4597dd784
 Lovable preview url: https://id-preview--40d76d2d-38c3-4173-8e18-bcb4597dd784.lovable.app
 Lovable editor url: https://lovable.dev/projects/40d76d2d-38c3-4173-8e18-bcb4597dd784
-Supabase project ref: <set once enable_database confirms provisioning>
+Supabase project ref: dtgwbqcjblbcgclogvtv
 Holdout seed set in use: 101-120
 Holdout burns: none
 
@@ -17,7 +17,7 @@ Holdout burns: none
 | P4 | CC | not_started | - | - | - | - | - |
 | P5 | CC | not_started | - | - | - | - | - |
 | P6 | CC | not_started | - | - | - | - | - |
-| P7 | CC | in_progress | - | phase/P7-shell | - | - | 2026-08-24 |
+| P7 | CC | complete | 7.1 (tsc) PASS, 7.7 (no service_role) PASS | phase/P7-shell | 8dce9af | p7-complete | 2026-08-25 |
 | P8 | CC | not_started | - | - | - | - | - |
 | P9 | CC | not_started | - | - | - | - | - |
 | P10 | CC | not_started | - | - | - | - | - |
