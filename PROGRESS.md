@@ -16,7 +16,7 @@ Holdout burns: none
 | P3 | CC | complete | 3.1-3.13 PASS | phase/P3-agent-guardrail | 1a5c098 | p3-complete | 2026-08-25 |
 | P4 | CC | complete | 4.1-4.11 PASS | phase/P4-classify-close | a8c8632 | p4-complete | 2026-08-25 |
 | P5 | CC | complete | 5.1-5.16 PASS | phase/P5-grader-eval-report | e0bcbce | p5-complete | 2026-08-25 |
-| P6 | CC | in_progress | 6.1-6.8 PASS | phase/P6-persistence-worker | - | - | 2026-08-25 |
+| P6 | CC | in_progress | 6.1-6.8 PASS | phase/P6-persistence-worker | edf656d | - | 2026-08-25 |
 | P7 | CC | complete-with-caveat | 7.1 (tsc) PASS, 7.7 (no service_role) PASS, 7.2-7.6/7.8 (Playwright, tests_ui/) 8/11 PASS -- 3 known-red (7.8 responsive 375px, 7.3 loading state role, 7.5 theme contrast) against real Track B bugs; Lovable applied+verified fixes in its cloud project, not yet synced into this repo (awaiting user's UI-main download) | phase/P7-shell | fda2461 | p7-complete | 2026-08-25 |
 | P8 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 8.1/8.6 (Playwright, exit gate) not yet written | phase/P8-dashboard | 0e850c1 | - | 2026-08-25 |
 | P9 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 9.1/9.3/9.4 (Playwright, exit gate) not yet written | phase/P9-workqueue | 2653c2b | - | 2026-08-25 |
