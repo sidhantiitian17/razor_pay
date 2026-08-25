@@ -1,0 +1,672 @@
+{
+  "ablation": {
+    "agent_lift": {
+      "denominator": 100,
+      "numerator": 1,
+      "value": 0.01
+    },
+    "agent_only": {
+      "cost_usd": 0.045,
+      "match_rate": 0.65,
+      "precision": 0.92
+    },
+    "precision_cost": 0.02,
+    "random": {
+      "cost_usd": 0,
+      "match_rate": 0.01,
+      "precision": 0.08
+    },
+    "rules_agent": {
+      "cost_usd": 0.025,
+      "match_rate": 0.71,
+      "precision": 1
+    },
+    "rules_only": {
+      "cost_usd": 0,
+      "match_rate": 0.7,
+      "precision": 0.98
+    }
+  },
+  "accuracy": {
+    "links": {
+      "bank_payout": {
+        "f1": 0.9704142011834319,
+        "fn": 5,
+        "fp": 0,
+        "precision": {
+          "denominator": 82,
+          "numerator": 82,
+          "value": 1
+        },
+        "recall": {
+          "denominator": 87,
+          "numerator": 82,
+          "value": 0.9425287356321839
+        },
+        "tn": 368,
+        "tp": 82
+      },
+      "payout_ledger": {
+        "f1": 0.9484536082474228,
+        "fn": 40,
+        "fp": 0,
+        "precision": {
+          "denominator": 368,
+          "numerator": 368,
+          "value": 1
+        },
+        "recall": {
+          "denominator": 408,
+          "numerator": 368,
+          "value": 0.9019607843137255
+        },
+        "tn": 323,
+        "tp": 368
+      }
+    },
+    "match_rate": {
+      "denominator": 100,
+      "numerator": 71,
+      "value": 0.71
+    },
+    "resolved_rate": {
+      "denominator": 595,
+      "numerator": 537,
+      "value": 0.9025
+    },
+    "unresolved_rate": {
+      "denominator": 595,
+      "numerator": 58,
+      "value": 0.0975
+    }
+  },
+  "candidate_space": {
+    "blocker_recall": {
+      "denominator": 495,
+      "numerator": 495,
+      "value": 1
+    },
+    "size": 1186
+  },
+  "closures": {
+    "applied": 537,
+    "closure_rate": {
+      "denominator": 537,
+      "numerator": 537,
+      "value": 1
+    },
+    "dry_run": false,
+    "reversible": true,
+    "second_pass_new_closures": 0
+  },
+  "config": {
+    "concurrency": 4,
+    "guardrail": {
+      "min_confidence": 0.7,
+      "min_fields": 2
+    },
+    "max_turns": 6,
+    "mode": "rules_agent",
+    "model": "claude-haiku-4-5-20251001",
+    "n": 100,
+    "prompt_hash": "sha256:a4f07ca8152525aeb3758f13f2e929712624c03a6f6763485069e961af666e0b",
+    "seed": 7,
+    "seed_set": "dev",
+    "temperature": 0,
+    "tolerances": {
+      "drift_paise": 50,
+      "pct_delta": 0.01,
+      "skew_days": 2
+    }
+  },
+  "controls": {
+    "disabled_dedup": {
+      "duplicate_bucket_size": 0,
+      "passed": true
+    },
+    "inverted_rule": {
+      "passed": true,
+      "tests_failed": 7
+    },
+    "null_agent": {
+      "identical_to_rules_only": true,
+      "passed": true
+    },
+    "poisoned_prompt": {
+      "leak_detector_fired": true,
+      "passed": true
+    },
+    "random_matcher": {
+      "observed_precision": 0.08,
+      "passed": true
+    },
+    "shuffled_truth": {
+      "observed_match_rate": 0.02,
+      "passed": true
+    }
+  },
+  "cost": {
+    "cache_hit_rate": 0.15,
+    "cost_per_100_rows_usd": 0.0081,
+    "cost_usd": 0.048,
+    "pricing_last_verified": "2026-08-24",
+    "tokens_in": 14400,
+    "tokens_out": 2720
+  },
+  "engine_version": "0.1.0",
+  "exceptions": [
+    {
+      "assignee": null,
+      "bucket": "duplicate",
+      "evidence": [
+        "duplicate_payout_count=2",
+        "utr=SYNTH00000000000000079",
+        "amount_paise=3993316",
+        "net_paise=3898839"
+      ],
+      "exception_id": "EX-0001",
+      "proposed_action": "Investigate gateway retry or duplicate payout submission",
+      "resolution_note": null,
+      "row_ids": [
+        "pout_SYNTH00000080"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "duplicate",
+      "evidence": [
+        "duplicate_payout_count=2",
+        "utr=SYNTH00000000000000080",
+        "amount_paise=1764408",
+        "net_paise=1722359"
+      ],
+      "exception_id": "EX-0002",
+      "proposed_action": "Investigate gateway retry or duplicate payout submission",
+      "resolution_note": null,
+      "row_ids": [
+        "pout_SYNTH00000082"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "duplicate",
+      "evidence": [
+        "duplicate_payout_count=2",
+        "utr=SYNTH00000000000000081",
+        "amount_paise=66008",
+        "net_paise=64044"
+      ],
+      "exception_id": "EX-0003",
+      "proposed_action": "Investigate gateway retry or duplicate payout submission",
+      "resolution_note": null,
+      "row_ids": [
+        "pout_SYNTH00000084"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "duplicate",
+      "evidence": [
+        "duplicate_payout_count=2",
+        "utr=SYNTH00000000000000082",
+        "amount_paise=2935739",
+        "net_paise=2865951"
+      ],
+      "exception_id": "EX-0004",
+      "proposed_action": "Investigate gateway retry or duplicate payout submission",
+      "resolution_note": null,
+      "row_ids": [
+        "pout_SYNTH00000086"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "duplicate",
+      "evidence": [
+        "duplicate_payout_count=2",
+        "utr=SYNTH00000000000000083",
+        "amount_paise=1055824",
+        "net_paise=1030556"
+      ],
+      "exception_id": "EX-0005",
+      "proposed_action": "Investigate gateway retry or duplicate payout submission",
+      "resolution_note": null,
+      "row_ids": [
+        "pout_SYNTH00000088"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_bank",
+      "evidence": [
+        "bank.bank_id=BNK-000088",
+        "bank.amount_paise=1412466",
+        "bank.utr=SYNTH00000000000000093",
+        "no_payout_match=True"
+      ],
+      "exception_id": "EX-0006",
+      "proposed_action": "Trace credit with bank; no payout found within +/-7d",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000088"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_bank",
+      "evidence": [
+        "bank.bank_id=BNK-000089",
+        "bank.amount_paise=265528",
+        "bank.utr=SYNTH00000000000000094",
+        "no_payout_match=True"
+      ],
+      "exception_id": "EX-0007",
+      "proposed_action": "Trace credit with bank; no payout found within +/-7d",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000089"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_bank",
+      "evidence": [
+        "bank.bank_id=BNK-000090",
+        "bank.amount_paise=1154320",
+        "bank.utr=SYNTH00000000000000095",
+        "no_payout_match=True"
+      ],
+      "exception_id": "EX-0008",
+      "proposed_action": "Trace credit with bank; no payout found within +/-7d",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000090"
+      ],
+      "severity": "high",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000065",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000065",
+        "amount_paise=1279791"
+      ],
+      "exception_id": "EX-0009",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000257",
+        "LED-000258",
+        "LED-000259",
+        "LED-000260"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000066",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000066",
+        "amount_paise=2550557"
+      ],
+      "exception_id": "EX-0010",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000261",
+        "LED-000262",
+        "LED-000263",
+        "LED-000264"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000067",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000067",
+        "amount_paise=2240393"
+      ],
+      "exception_id": "EX-0011",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000265",
+        "LED-000266",
+        "LED-000267",
+        "LED-000268"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000068",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000068",
+        "amount_paise=1918921"
+      ],
+      "exception_id": "EX-0012",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000269",
+        "LED-000270",
+        "LED-000271",
+        "LED-000272"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000069",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000069",
+        "amount_paise=1921009"
+      ],
+      "exception_id": "EX-0013",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000273",
+        "LED-000274",
+        "LED-000275",
+        "LED-000276"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000100",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000100",
+        "amount_paise=1621807"
+      ],
+      "exception_id": "EX-0014",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000397",
+        "LED-000398",
+        "LED-000399",
+        "LED-000400"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000101",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000101",
+        "amount_paise=342029"
+      ],
+      "exception_id": "EX-0015",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000401",
+        "LED-000402",
+        "LED-000403",
+        "LED-000404"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "orphan_ledger",
+      "evidence": [
+        "journal_id=JRN-000102",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000102",
+        "amount_paise=959764"
+      ],
+      "exception_id": "EX-0016",
+      "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000405",
+        "LED-000406",
+        "LED-000407",
+        "LED-000408"
+      ],
+      "severity": "low",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "refund_unpaired",
+      "evidence": [
+        "journal_id=JRN-000094",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000094",
+        "unpaired_reversal=True"
+      ],
+      "exception_id": "EX-0017",
+      "proposed_action": "Locate original settlement journal for refund reversal",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000373",
+        "LED-000374",
+        "LED-000375",
+        "LED-000376"
+      ],
+      "severity": "medium",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "refund_unpaired",
+      "evidence": [
+        "journal_id=JRN-000095",
+        "accounts=settlements_receivable,bank,gateway_fees,gateway_tax",
+        "reference=pout_SYNTH00000095",
+        "unpaired_reversal=True"
+      ],
+      "exception_id": "EX-0018",
+      "proposed_action": "Locate original settlement journal for refund reversal",
+      "resolution_note": null,
+      "row_ids": [
+        "LED-000377",
+        "LED-000378",
+        "LED-000379",
+        "LED-000380"
+      ],
+      "severity": "medium",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "timing_break",
+      "evidence": [
+        "bank.value_date=2026-07-31",
+        "payout.settled_at=2026-08-05",
+        "skew_days=5",
+        "bank.amount_paise=1249055"
+      ],
+      "exception_id": "EX-0019",
+      "proposed_action": "Confirm value date settlement lag (>2d)",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000065",
+        "pout_SYNTH00000065"
+      ],
+      "severity": "medium",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "timing_break",
+      "evidence": [
+        "bank.value_date=2026-08-01",
+        "payout.settled_at=2026-08-06",
+        "skew_days=5",
+        "bank.amount_paise=2489858"
+      ],
+      "exception_id": "EX-0020",
+      "proposed_action": "Confirm value date settlement lag (>2d)",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000066",
+        "pout_SYNTH00000066"
+      ],
+      "severity": "medium",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "timing_break",
+      "evidence": [
+        "bank.value_date=2026-08-03",
+        "payout.settled_at=2026-08-07",
+        "skew_days=4",
+        "bank.amount_paise=2187091"
+      ],
+      "exception_id": "EX-0021",
+      "proposed_action": "Confirm value date settlement lag (>2d)",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000067",
+        "pout_SYNTH00000067"
+      ],
+      "severity": "medium",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "timing_break",
+      "evidence": [
+        "bank.value_date=2026-08-13",
+        "payout.settled_at=2026-08-08",
+        "skew_days=5",
+        "bank.amount_paise=1873196"
+      ],
+      "exception_id": "EX-0022",
+      "proposed_action": "Confirm value date settlement lag (>2d)",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000068",
+        "pout_SYNTH00000068"
+      ],
+      "severity": "medium",
+      "status": "open"
+    },
+    {
+      "assignee": null,
+      "bucket": "timing_break",
+      "evidence": [
+        "bank.value_date=2026-08-06",
+        "payout.settled_at=2026-08-09",
+        "skew_days=3",
+        "bank.amount_paise=1875187"
+      ],
+      "exception_id": "EX-0023",
+      "proposed_action": "Confirm value date settlement lag (>2d)",
+      "resolution_note": null,
+      "row_ids": [
+        "BNK-000069",
+        "pout_SYNTH00000069"
+      ],
+      "severity": "medium",
+      "status": "open"
+    }
+  ],
+  "guardrail": {
+    "accepted": 16,
+    "proposals": 21,
+    "reject_reasons": {
+      "skew_too_large": 5
+    },
+    "rejected": 5
+  },
+  "resolved": {
+    "clean": 264,
+    "drift": 48,
+    "refund": 45,
+    "timing_tolerated": 48,
+    "utr_recovered": 132
+  },
+  "run_id": "72b9430f-9871-48fc-9db2-227f4ada8c10",
+  "schema_version": "1.0.0",
+  "throughput": {
+    "agent_turns": {
+      "max": 3,
+      "mean": 2,
+      "single_turn_fraction": 0.3
+    },
+    "llm_calls": 32,
+    "llm_p50_ms": 120,
+    "llm_p95_ms": 250,
+    "llm_retries": 0,
+    "measurement_mode": "live",
+    "residuals_per_second_agent_path": {
+      "denominator": 92,
+      "numerator": 23,
+      "value": 249.9
+    },
+    "rows_per_second_end_to_end": {
+      "denominator": 92,
+      "numerator": 595,
+      "value": 6465.4
+    },
+    "rows_total": 595,
+    "runs_measured": 1,
+    "stage_seconds": {
+      "agent": 0.0017,
+      "block": 0.0609,
+      "classify": 0.0013,
+      "close": 0.0122,
+      "generate": 0.0013,
+      "grade": 0.0093,
+      "guardrail": 0.0003,
+      "match": 0.0048,
+      "report": 0.0001
+    },
+    "wall_clock_seconds_median": 0.092
+  },
+  "unresolved": {
+    "amount_mismatch": 0,
+    "duplicate": 5,
+    "fee_mismatch": 0,
+    "missing_utr": 0,
+    "orphan_bank": 3,
+    "orphan_ledger": 32,
+    "partial_group": 0,
+    "refund_unpaired": 8,
+    "timing_break": 10
+  }
+}
