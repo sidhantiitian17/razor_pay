@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal, cast
 
 import click
 
@@ -88,13 +89,14 @@ def run(mode: str, seeds: str, n: int, report_out: Path) -> None:
     # For holdout range (101-120), generate aggregate or first holdout baseline
     first_seed = seed_list[0]
     seed_set = _classify_seed_set(first_seed)
-
     dataset = generate_dataset(n=n, seed=first_seed)
+    typed_mode = cast("Literal['rules_only', 'agent_only', 'rules_agent', 'random']", mode)
+    typed_seed_set = cast("Literal['dev', 'holdout', 'regression']", seed_set)
     report = generate_reconciliation_report(
         dataset=dataset,
-        mode=mode,
+        mode=typed_mode,
         seed=first_seed,
-        seed_set=seed_set,
+        seed_set=typed_seed_set,
     )
 
     write_baseline_report(report, report_out)
@@ -102,11 +104,67 @@ def run(mode: str, seeds: str, n: int, report_out: Path) -> None:
 
 
 @main.command()
-@click.argument("run_a")
-@click.argument("run_b")
-def compare(run_a: str, run_b: str) -> None:
-    """Compare two runs and emit a metric delta table."""
-    click.echo(f"Compare: {run_a} vs {run_b} (not yet implemented)")
+@click.argument("run_a", type=click.Path(exists=True, path_type=Path))
+@click.argument("run_b", type=click.Path(exists=True, path_type=Path))
+def compare(run_a: Path, run_b: Path) -> None:
+    """Compare two runs and emit a metric delta table (D18)."""
+    import json
+
+    with run_a.open("r", encoding="utf-8") as f:
+        data_a = json.load(f)
+    with run_b.open("r", encoding="utf-8") as f:
+        data_b = json.load(f)
+
+    def extract_metrics(doc: dict[str, object]) -> dict[str, float]:
+        metrics: dict[str, float] = {}
+        if "accuracy" in doc and isinstance(doc["accuracy"], dict):
+            acc = doc["accuracy"]
+            metrics["Match Rate"] = float(acc["match_rate"]["value"])
+            metrics["Resolved Rate"] = float(acc["resolved_rate"]["value"])
+            metrics["Unresolved Rate"] = float(acc["unresolved_rate"]["value"])
+            if "links" in acc and isinstance(acc["links"], dict):
+                bp = acc["links"].get("bank_payout", {})
+                if isinstance(bp, dict) and "precision" in bp:
+                    metrics["Precision (BP)"] = float(bp["precision"]["value"])
+                    metrics["Recall (BP)"] = float(bp["recall"]["value"])
+                    metrics["F1 (BP)"] = float(bp["f1"])
+        elif "arms" in doc and isinstance(doc["arms"], dict):
+            # Ablation doc format
+            ra = doc["arms"].get("rules_agent", {})
+            if isinstance(ra, dict):
+                metrics["Match Rate"] = float(ra.get("match_rate", 0.0))
+                metrics["Precision (BP)"] = float(ra.get("precision", 0.0))
+                metrics["Cost (USD)"] = float(ra.get("cost_usd", 0.0))
+        if "cost" in doc and isinstance(doc["cost"], dict):
+            metrics["Cost (USD)"] = float(doc["cost"].get("cost_usd", 0.0))
+        if "throughput" in doc and isinstance(doc["throughput"], dict):
+            tp = doc["throughput"].get("rows_per_second_end_to_end", {})
+            if isinstance(tp, dict) and "value" in tp:
+                metrics["Throughput (rows/s)"] = float(tp["value"])
+        return metrics
+
+    m_a = extract_metrics(data_a)
+    m_b = extract_metrics(data_b)
+
+    all_keys = sorted(set(m_a.keys()) | set(m_b.keys()))
+
+    click.echo("=" * 72)
+    click.echo(f"METRIC DELTA COMPARISON (D18): {run_a.name} vs {run_b.name}")
+    click.echo("=" * 72)
+    click.echo(f"{'Metric':<24} {'Run A':<14} {'Run B':<14} {'Delta':<14}")
+    click.echo("-" * 72)
+
+    for k in all_keys:
+        val_a = m_a.get(k, 0.0)
+        val_b = m_b.get(k, 0.0)
+        delta = val_b - val_a
+        sign = "+" if delta >= 0 else ""
+        if "Cost" in k:
+            click.echo(f"{k:<24} ${val_a:<13.4f} ${val_b:<13.4f} {sign}${delta:<13.4f}")
+        else:
+            click.echo(f"{k:<24} {val_a:<14.4f} {val_b:<14.4f} {sign}{delta:<14.4f}")
+
+    click.echo("=" * 72)
 
 
 if __name__ == "__main__":

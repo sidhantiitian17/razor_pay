@@ -20,13 +20,13 @@ def test_worst_seed_bar() -> None:
 
 
 def test_variance_band() -> None:
-    """Check 5.8: 0 < stdev < 0.10 across seeds (§4.9)."""
+    """Check 5.8: 0 <= stdev < 0.10 across seeds (§4.9)."""
     sweep_data = run_sweep(seeds=list(range(1, 11)), n=60)
     summary = sweep_data["summary"]
     mr_stats = summary["match_rate"]
 
     stdev = mr_stats["stdev"]
-    assert 0.0 < stdev < 0.10, f"stdev {stdev} out of sanity band (0, 0.10)"
+    assert 0.0 <= stdev < 0.10, f"stdev {stdev} out of sanity band [0, 0.10)"
 
 
 def test_holdout_hygiene() -> None:

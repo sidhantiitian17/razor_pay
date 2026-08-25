@@ -13,7 +13,8 @@ def _make_sample_report() -> dict[str, object]:
     generator = ReportGenerator()
     return generator.generate_report(
         dataset=dataset,
-        measurement_mode="rules_only",
+        measurement_mode="live",
+        mode="rules_only",
         seed_set="holdout",
         seeds=[42],
         dry_run=False,
@@ -52,15 +53,15 @@ def test_denominators() -> None:
 def test_totals_reconcile() -> None:
     """Check 5.4: sum(resolved) + sum(unresolved) == rows_total (R6, D5)."""
     report = _make_sample_report()
-    summary = report["summary"]
+    throughput = report["throughput"]
     resolved = report["resolved"]
     unresolved = report["unresolved"]
 
-    assert isinstance(summary, dict)
+    assert isinstance(throughput, dict)
     assert isinstance(resolved, dict)
     assert isinstance(unresolved, dict)
 
-    rows_total = summary["rows_total"]
+    rows_total = throughput["rows_total"]
     resolved_sum = sum(v for v in resolved.values() if isinstance(v, int))
     unresolved_sum = sum(v for v in unresolved.values() if isinstance(v, int))
 
@@ -86,16 +87,16 @@ def test_exception_evidence() -> None:
 def test_stage_seconds() -> None:
     """Check 5.13: All 9 stage timings present and summing within 5% of wall clock (R7)."""
     report = _make_sample_report()
-    timings = report["timings"]
-    assert isinstance(timings, dict)
+    throughput = report["throughput"]
+    assert isinstance(throughput, dict)
 
-    stage_seconds = timings["stage_seconds"]
+    stage_seconds = throughput["stage_seconds"]
     assert isinstance(stage_seconds, dict)
 
     expected_stages = {
-        "load",
+        "generate",
         "block",
-        "rules",
+        "match",
         "agent",
         "guardrail",
         "classify",
@@ -106,7 +107,7 @@ def test_stage_seconds() -> None:
     assert expected_stages.issubset(stage_seconds.keys())
 
     total_stage_time = sum(v for v in stage_seconds.values() if isinstance(v, (int, float)))
-    wall_clock = timings["wall_clock_seconds"]
+    wall_clock = throughput["wall_clock_seconds_median"]
     assert isinstance(wall_clock, (int, float))
 
     # Assert within 5% of wall clock (or minimal duration)

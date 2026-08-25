@@ -2,6 +2,22 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P5] — Grader, Reporter, Eval Harness — 2026-08-25
+
+### Added
+- `engine/core/grader.py` — Link-level evaluation grader producing `LinkDecision[]` (TP, FP, FN, TN) and link confusion matrices, strictly isolated from matching algorithms and agent runner (checks 5.2, 5.16, R8, D6).
+- `engine/app/reporter.py` — Complete report generator validating against frozen `contracts/report.schema.json`, reporting all 9 stage timings, explicit numerators/denominators (I11), full exceptions with evidence/actions, and reconciling totals `sum(resolved) + sum(unresolved) == rows_total` (checks 5.1, 5.3, 5.4, 5.12, 5.13, R5, R6, R7, D5).
+- `engine/eval/sweep.py` — Multi-seed sweep evaluation harness across dev (1–10) and holdout (101–120) seeds with mean, stdev, min, max, and 2000-resample bootstrap CI, gated on worst seed min (checks 5.5, 5.6, 5.8, R10).
+- `engine/eval/ablation.py` — 4-arm ablation harness evaluating `rules_only`, `agent_only`, `rules_agent`, `random` with `agent_lift > 0` and `precision_cost` reporting (check 5.7, R8, D7).
+- `engine/eval/controls.py` — Automated 6 negative controls suite (`shuffled_truth`, `null_agent`, `random_matcher`, `poisoned_prompt`, `inverted_rule`, `disabled_dedup`) proving falsifiability in CI (check 5.14, §4.6).
+- `engine/eval/bench.py` — Live throughput and latency benchmarking harness measuring median across 3 runs and 1/4/8 concurrency levels (check 5.11, R7).
+- `engine/cli.py` — Implemented `compare <run_a> <run_b>` command emitting metric delta tables (check 5.9, D18).
+- `scripts/checks/P5.sh` — Automated verification runner for checks 5.1 through 5.16.
+
+### Verified
+- **Checks:** 5.1–5.16 PASS (16/16). `uv run pytest tests/ -q`: 129/129 passed (100% coverage on grader, 97% on closer, 91% on classify, 98% on guardrail). `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean. `lint-imports`: Core purity kept. `gitleaks detect --no-git`: 0 findings.
+- **Exit gate:** 5.5 (sweep on unseen seeds), 5.7 (ablation lift over baseline), 5.14 (all 6 controls), 5.15 (holdout hygiene enforced) verified.
+
 ## [P4] — Classifier and Closer — 2026-08-25
 
 ### Added

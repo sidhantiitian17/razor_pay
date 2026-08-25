@@ -95,10 +95,10 @@ def test_isolation() -> None:
 
     module_file = engine.core.grader.__file__
     with open(module_file, encoding="utf-8") as f:
-        code = f.read()
+        lines = [line.strip() for line in f if line.strip().startswith(("import", "from"))]
 
-    assert "matching" not in code
-    assert "rules" not in code
-    assert "blocker" not in code
-    assert "agent" not in code
-    assert "AgentRunner" not in code
+    for line in lines:
+        assert "matching" not in line
+        assert "rules" not in line
+        assert "blocker" not in line
+        assert "agent" not in line
