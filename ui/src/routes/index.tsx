@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { DataSurface } from "@/components/shell/data-surface";
+import type { SurfaceStatus } from "@/components/shell/data-surface";
 import { PageHeader, RevealItem, StagedReveal } from "@/components/shell/page-states";
 import { useSurfaceStatus } from "@/hooks/use-surface-status";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { state?: SurfaceStatus } => {
+    const state = search["state"];
+    if (state === "loading" || state === "empty" || state === "error") return { state };
+    return {};
+  },
   head: () => ({
     meta: [
       { title: "Runs — 3-Way Settlement Reconciliation" },

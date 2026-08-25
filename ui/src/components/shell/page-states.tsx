@@ -61,7 +61,13 @@ export function RevealItem({ children }: { children: ReactNode }) {
 
 export function PanelSkeleton({ rows = 6 }: { rows?: number | undefined }) {
   return (
-    <div className="panel p-4" role="status" aria-busy="true" aria-live="polite">
+    <div
+      className="panel p-4"
+      role="status"
+      aria-label="Loading data"
+      aria-busy="true"
+      aria-live="polite"
+    >
       <div className="mb-4 flex min-w-0 gap-3 sm:gap-6">
         <Skeleton className="h-8 w-full max-w-40" />
         <Skeleton className="h-8 w-full max-w-40" />
