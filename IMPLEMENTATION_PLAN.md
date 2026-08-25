@@ -974,29 +974,29 @@ Complete only when **every** line is true, verified by command.
 
 **Requirement atoms**
 
-- [ ] **R1** Agent is a bounded multi-turn tool loop; tools proven load-bearing — 3.11, 3.12, 3.13, 10.1
-- [ ] **R2** Loop closes: applied, reversible, never on unresolved rows, converges on second pass — 4.6–4.10, 12.1, 12.3, 12.4, 12.6
-- [ ] **R3** >= 50 records per source, 3 sources — 1.8
-- [ ] **R4** Synthetic only, no real UTR patterns — 1.7
-- [ ] **R5** `match_rate` with numerator, denominator, seed, seed-set — 0.10, 5.3, 8.2
-- [ ] **R6** Exception list complete, evidenced, exportable, reconciling — 1.4, 1.9, 4.2, 4.3, 4.4, 5.4, 5.12, 9.1, 9.4
-- [ ] **R7** Throughput live-measured, staged, p50/p95, replay labelled and excluded — 5.11, 5.13, 8.7
-- [ ] **R8** Link-level accuracy over a stated candidate space, 4-arm ablation — 2.1, 5.2, 5.7, 8.3, 8.4
-- [ ] **R9** Unresolved as prominent as match rate; falsification published — 8.5, 10.7, 13.13
-- [ ] **R10** 20 holdout seeds, bar gated on worst, holdout hygiene enforced — 5.5, 5.6, 5.15, 11.1, 11.2, 11.3
+- [ ] **R1** Agent is a bounded multi-turn tool loop; tools proven load-bearing — 3.11, 3.12, 3.13, 10.1 (10.1 `trace_turns.spec.ts` not yet written -- 3.11-3.13 verified PASS via `scripts/checks/P3.sh`)
+- [x] **R2** Loop closes: applied, reversible, never on unresolved rows, converges on second pass — 4.6–4.10, 12.1, 12.3, 12.4, 12.6 (4.6-4.10 PASS via `scripts/checks/P4.sh`; 12.1/12.3/12.4/12.6 PASS per PROGRESS.md P12 row, PR #22)
+- [x] **R3** >= 50 records per source, 3 sources — 1.8 (PASS via `scripts/checks/P1.sh`, `cli_generate`)
+- [x] **R4** Synthetic only, no real UTR patterns — 1.7 (PASS via `scripts/checks/P1.sh`, `no_real_utrs`)
+- [ ] **R5** `match_rate` with numerator, denominator, seed, seed-set — 0.10, 5.3, 8.2 (8.2 `denominators.spec.ts` not yet written)
+- [x] **R6** Exception list complete, evidenced, exportable, reconciling — 1.4, 1.9, 4.2, 4.3, 4.4, 5.4, 5.12, 9.1, 9.4 (1.4/1.9 PASS via P1.sh; 4.2/4.3/4.4 PASS via P4.sh; 5.4/5.12 PASS via P5.sh; 9.1/9.4 PASS this session, PR #29)
+- [ ] **R7** Throughput live-measured, staged, p50/p95, replay labelled and excluded — 5.11, 5.13, 8.7 (8.7 `throughput_mode.spec.ts` not yet written)
+- [ ] **R8** Link-level accuracy over a stated candidate space, 4-arm ablation — 2.1, 5.2, 5.7, 8.3, 8.4 (8.3 `confusion.spec.ts`, 8.4 `ablation_panel.spec.ts` not yet written)
+- [ ] **R9** Unresolved as prominent as match rate; falsification published — 8.5, 10.7, 13.13 (8.5 `unresolved_prominence.spec.ts`, 10.7 `falsification.spec.ts` not yet written; 13.13 PASS)
+- [ ] **R10** 20 holdout seeds, bar gated on worst, holdout hygiene enforced — 5.5, 5.6, 5.15, 11.1, 11.2, 11.3 (11.1 `sweep_points.spec.ts` not yet written; 5.5/5.6/5.15/11.2/11.3 all PASS)
 
 **Engineering gates**
 
-- [ ] All 14 phase gates green
-- [ ] `blocker_recall == 1.0` on all reported seeds
-- [ ] Baseline published before the agent existed; `agent_lift > 0` with `precision_cost` stated
-- [ ] All 6 negative controls produce their expected outcome
-- [ ] Guardrail threshold justified by a committed PR curve fitted on dev seeds only
-- [ ] Replay byte-stable; zero network calls in CI
-- [ ] No truth label in any prompt — proven in Python and in the UI
-- [ ] `ANTHROPIC_API_KEY` in no client bundle and no published row
-- [ ] Verify page passes on a good fixture and **fails** on a poisoned one
-- [ ] Coverage >= 85% overall, >= 95% on safety-critical modules, mutation score >= 80%
+- [ ] All 14 phase gates green (P7 still `complete-with-caveat` in PROGRESS.md -- 3 known-red Playwright checks pending UI-main reconciliation; all other 13 phases genuinely green)
+- [x] `blocker_recall == 1.0` on all reported seeds (PASS via `scripts/checks/P2.sh`, check 2.1)
+- [x] Baseline published before the agent existed; `agent_lift > 0` with `precision_cost` stated (2.9 `baseline_published` + 5.7 `ablation_harness`, both PASS via `scripts/checks/all.sh`)
+- [x] All 6 negative controls produce their expected outcome (5.14 `negative_controls` PASS via `scripts/checks/P5.sh`)
+- [x] Guardrail threshold justified by a committed PR curve fitted on dev seeds only (3.8 `threshold_sweep` PASS via `scripts/checks/P3.sh`)
+- [x] Replay byte-stable; zero network calls in CI (3.6 `replay_determinism`, 3.10 `cassette_secrets` PASS via `scripts/checks/P3.sh`)
+- [ ] No truth label in any prompt — proven in Python and in the UI (Python side proven: 3.4 `no_truth_leak` PASS; UI side unproven: 10.3 `trace_prompt.spec.ts` not yet written)
+- [x] `ANTHROPIC_API_KEY` in no client bundle and no published row (`grep -rn ANTHROPIC_API_KEY ui/src` — 0 matches; published-row side covered by check 6.2, P6 exit gate)
+- [x] Verify page passes on a good fixture and **fails** on a poisoned one (10.6 PASS this session, PR #28, golden-vs-poisoned pair)
+- [ ] Coverage >= 85% overall, >= 95% on safety-critical modules, mutation score >= 80% (coverage PASS: 88.01% overall, >=98% safety-critical per PR #30; **mutation score never measured** — no `mutmut`/13.2 run exists anywhere in this project's history)
 
 ---
 
