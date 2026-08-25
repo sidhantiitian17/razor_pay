@@ -1,4 +1,4 @@
-import { useRouterState } from "@tanstack/react-router";
+import { useSearch } from "@tanstack/react-router";
 
 import { useConnectionState } from "@/components/shell/connection-status";
 import type { SurfaceStatus } from "@/components/shell/data-surface";
@@ -10,9 +10,11 @@ import type { SurfaceStatus } from "@/components/shell/data-surface";
  */
 export function useSurfaceStatus(): SurfaceStatus {
   const connection = useConnectionState();
-  const search = useRouterState({ select: (state) => state.location.searchStr });
+  const override = useSearch({
+    strict: false,
+    select: (search) => search.state,
+  });
 
-  const override = new URLSearchParams(search).get("state");
   if (override === "loading" || override === "empty" || override === "error") return override;
 
   if (connection === "connecting") return "loading";

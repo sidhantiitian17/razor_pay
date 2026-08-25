@@ -103,30 +103,38 @@ async function checkContrast(page: import("@playwright/test").Page) {
   const limited = elements.slice(0, 20);
   for (const element of limited) {
     if (!(await element.isVisible())) continue;
-    const color = await element.evaluate((el) => {
+    const info = await element.evaluate((el) => {
       const style = window.getComputedStyle(el);
-      return style.color;
+      return {
+        ariaHidden: el.getAttribute("aria-hidden"),
+        text: el.textContent?.trim() ?? "",
+        color: style.color,
+        backgroundColor: style.backgroundColor,
+      };
     });
-    const backgroundColor = await element.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return style.backgroundColor;
-    });
+    // WCAG 1.4.3 contrast applies to text (and images of text), not decorative
+    // non-text nodes. Skip aria-hidden elements and elements with no rendered
+    // text -- e.g. a filled status dot -- since there is no glyph for the
+    // reader to fail to perceive, so the element's inherited `color` is
+    // irrelevant regardless of how it measures against its background.
+    if (info.ariaHidden === "true" || info.text.length === 0) continue;
+    const { color, backgroundColor } = info;
     // Skip if background is transparent or if we cannot compute
     if (backgroundColor === "transparent" || backgroundColor === "rgba(0, 0, 0, 0)") {
       // We need to get the background color of the parent? Too complex.
       // For now, we skip transparent backgrounds.
       continue;
     }
+    let ratio: number;
     try {
-      const ratio = contrastRatio(color, backgroundColor);
-      expect(
-        ratio,
-        `Element has insufficient contrast: ${color} on ${backgroundColor} ratio=${ratio}`,
-      ).toBeGreaterThanOrEqual(4.5);
+      ratio = contrastRatio(color, backgroundColor);
     } catch (e) {
-      // If we cannot compute contrast, we skip the element but log a warning? We'll just skip.
-      // We'll throw an error to fail the test if we cannot compute.
+      // If we cannot compute contrast, fail loudly rather than silently skip.
       throw new Error(`Could not compute contrast for element: ${e}`);
     }
+    expect(
+      ratio,
+      `Element has insufficient contrast: ${color} on ${backgroundColor} ratio=${ratio}`,
+    ).toBeGreaterThanOrEqual(4.5);
   }
 }
