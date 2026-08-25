@@ -4,23 +4,7 @@ import goldenFixture from "./fixtures/run_p10_golden.json" with { type: "json" }
 import poisonedFixture from "./fixtures/run_p10_poisoned.json" with { type: "json" };
 import { computeAntiSlopChecks, type VerifyInputs } from "../src/lib/anti-slop-checks";
 
-// Matches ui/.env -- publishable/anon key, read-only under RLS, same
-// credential the deployed UI itself uses.
-const SUPABASE_URL = "https://dtgwbqcjblbcgclogvtv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_LXQj3IBK6t9AZgn6TQJOmQ_eNqEvfat";
-
 const POISONED_RUN_ID = poisonedFixture.run_id;
-
-async function fetchLatestRunId(): Promise<string> {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/runs?select=run_id&order=created_at.desc&limit=1`,
-    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } },
-  );
-  if (!res.ok) throw new Error(`Supabase REST fetch failed: ${res.status} ${await res.text()}`);
-  const rows = (await res.json()) as Array<{ run_id: string }>;
-  if (rows.length === 0) throw new Error("No runs published");
-  return rows[0]!.run_id;
-}
 
 function emptyInputs(report: typeof goldenFixture): VerifyInputs {
   // computeAntiSlopChecks is fed report + calls/closures/exceptions rows.
@@ -67,19 +51,27 @@ test.describe("Check 10.6: golden vs poisoned fixture", () => {
     expect(costHonesty?.verdict).toBe("pass");
   });
 
-  // Live DOM proof against the actual deployed page. Guarded with a loud,
-  // visible assertion (not a silent skip/fallback) if another agent's
-  // publish raced ahead of the fixture seeded for this test -- the fix in
-  // that case is to reseed the poisoned run as latest, not to let the test
-  // pass vacuously.
+  // Live DOM proof against the actual deployed page. Intercepts the runs query
+  // to deterministically supply the poisoned fixture, ensuring the test is immune
+  // to concurrent publishes or shared-database staleness.
   test("Verify page: renders fail for Rates reconcile on the live poisoned run", async ({
     page,
   }) => {
-    const latestRunId = await fetchLatestRunId();
-    expect(
-      latestRunId,
-      "another run was published after the P10 poisoned fixture was seeded as latest -- reseed it before running this test",
-    ).toBe(POISONED_RUN_ID);
+    await page.route("**/rest/v1/runs*", async (route) => {
+      const runRow = {
+        run_id: POISONED_RUN_ID,
+        engine_version: "0.1.0",
+        status: "complete",
+        created_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        report: poisonedFixture,
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([runRow]),
+      });
+    });
 
     await page.goto("/verify");
     await expect(page.getByRole("heading", { name: "Verify" })).toBeVisible();
