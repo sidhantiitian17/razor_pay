@@ -50,6 +50,14 @@ class StoragePort(Protocol):
         """Persist audit-grade closure journal entries for a run."""
         ...
 
+    def save_eval_sweeps(self, run_id: str, sweeps: list[dict[str, Any]]) -> None:
+        """Persist eval sweep distribution rows for a run."""
+        ...
+
+    def get_eval_sweeps(self, run_id: str) -> list[dict[str, Any]]:
+        """Retrieve eval sweep rows for a run."""
+        ...
+
     def save_control_results(self, run_id: str, control_results: list[dict[str, Any]]) -> None:
         """Persist negative control verification results for a run."""
         ...

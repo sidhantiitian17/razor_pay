@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import click
 
 from engine.app.reporter import generate_reconciliation_report, write_baseline_report
 from engine.core.generator.build import generate_dataset
+
+if TYPE_CHECKING:
+    from engine.ports.store import StoragePort
 
 
 @click.group()
@@ -66,15 +69,27 @@ def _classify_seed_set(seed: int) -> str:
     )
 
 
+def _resolve_storage_adapter(db: str) -> StoragePort:
+    import os
+
+    if db.lower() == "supabase" or os.environ.get("USE_SUPABASE") == "1":
+        from engine.adapters.store_supabase import SupabaseStorageAdapter
+
+        return SupabaseStorageAdapter()
+    from engine.adapters.store_sqlite import SQLiteStorageAdapter
+
+    return SQLiteStorageAdapter(db_path=db)
+
+
 @main.command()
 @click.option(
     "--mode",
-    default="rules_only",
     type=click.Choice(["rules_only", "agent_only", "rules_agent", "random"]),
-    help="Matching mode",
+    default="rules_agent",
+    help="Reconciliation matching mode",
 )
-@click.option("--seeds", default="42", help="Seed or seed range (e.g. 101-120)")
-@click.option("--n", default=100, type=int, help="Number of records per seed")
+@click.option("--seeds", default="42", help="Seed or seed range (e.g. 42 or 101-120)")
+@click.option("--n", type=int, default=100, help="Number of cases per seed (>=50)")
 @click.option(
     "--report-out",
     default="reports/baseline.json",
@@ -82,7 +97,11 @@ def _classify_seed_set(seed: int) -> str:
     help="Output path for the report JSON",
 )
 @click.option("--publish", is_flag=True, default=False, help="Publish results to storage")
-@click.option("--db", default="data/reconciliation.db", help="SQLite database path")
+@click.option(
+    "--db",
+    default="data/reconciliation.db",
+    help="Database target (SQLite path or 'supabase')",
+)
 def run(
     mode: str,
     seeds: str,
@@ -92,7 +111,6 @@ def run(
     db: str = "data/reconciliation.db",
 ) -> None:
     """Run the reconciliation pipeline."""
-    from engine.adapters.store_sqlite import SQLiteStorageAdapter
     from engine.app.publisher import ReportPublisher
 
     seed_list = _parse_seeds(seeds)
@@ -115,27 +133,30 @@ def run(
     click.echo(f"Baseline report successfully published to {report_out}")
 
     if publish:
-        store = SQLiteStorageAdapter(db_path=db)
+        store = _resolve_storage_adapter(db=db)
         publisher = ReportPublisher(store=store)
         publisher.publish(dataset=dataset, report=report)
-        click.echo("Published reconciliation dataset and report to database.")
+        click.echo(f"Published reconciliation dataset and report to database ({db}).")
 
 
 @main.command()
 @click.option("--once", is_flag=True, default=False, help="Process one task and exit")
-@click.option("--db", default="data/reconciliation.db", help="SQLite DB path")
+@click.option(
+    "--db",
+    default="data/reconciliation.db",
+    help="Database target (SQLite path or 'supabase')",
+)
 def worker(once: bool, db: str) -> None:
     """Run background queue worker to process run requests."""
-    from engine.adapters.store_sqlite import SQLiteStorageAdapter
     from engine.app.worker import ReconciliationWorker
 
-    store = SQLiteStorageAdapter(db_path=db)
+    store = _resolve_storage_adapter(db=db)
     w = ReconciliationWorker(store=store)
     if once:
         processed = w.run_once()
         click.echo(f"Worker executed task: {processed}")
     else:
-        click.echo("Starting worker polling loop...")
+        click.echo(f"Starting worker polling loop on {db}...")
         w.run_loop()
 
 

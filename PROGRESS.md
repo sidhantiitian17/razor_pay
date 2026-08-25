@@ -21,7 +21,7 @@ Holdout burns: none
 | P8 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 8.1/8.6 (Playwright, exit gate) not yet written | phase/P8-dashboard | 0e850c1 | - | 2026-08-25 |
 | P9 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 9.1/9.3/9.4 (Playwright, exit gate) not yet written | phase/P9-workqueue | 2653c2b | - | 2026-08-25 |
 | P10 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 10.6 (Playwright, exit gate) not yet written | phase/P10-P11-trace-eval-verify | fffc066 | - | 2026-08-25 |
-| P11 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 11.2/11.3 (Playwright, exit gate) not yet written | phase/P10-P11-trace-eval-verify | fffc066 | - | 2026-08-25 |
+| P11 | CC / Pam | complete | 11.2 (worst_seed.spec.ts), 11.3 (seed_set_labels.spec.ts) PASS (Playwright exit gate verified) | phase/P11-playwright-gate | HEAD | p11-complete | 2026-08-25 |
 | P12 | CC | complete | 12.1-12.7 PASS | phase/P12-live-wiring | bb91e92 | p12-complete | 2026-08-25 |
 | P13 | CC | complete | 13.1-13.13 PASS | phase/P13-hardening | ad734cb | p13-complete | 2026-08-25 |
 
