@@ -1,48 +1,73 @@
 import { test, expect } from "@playwright/test";
 
+// Matches ui/.env -- publishable/anon key, read-only under RLS, same
+// credential the deployed UI itself uses. (Playwright does not load .env by
+// default, so this must not depend on process.env being populated.)
+const SUPABASE_URL = "https://dtgwbqcjblbcgclogvtv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_LXQj3IBK6t9AZgn6TQJOmQ_eNqEvfat";
+
+async function restGet<T>(path: string): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+  });
+  if (!res.ok) throw new Error(`Supabase REST fetch failed: ${res.status} ${await res.text()}`);
+  return res.json() as Promise<T>;
+}
+
+interface ExceptionRow {
+  exception_id: string;
+  evidence: string[];
+}
+
+/**
+ * Check 9.4: "Every exception shows >= 2 evidence strings matching the
+ * report." Two literal parts, both checked without heuristics:
+ *  1. Data: every exception row in the `exceptions` table has
+ *     evidence.length >= 2 (this is what R6/R9 actually require -- not a
+ *     line-count heuristic on the sheet's rendered text).
+ *  2. UI: the ExceptionSheet's "Evidence" panel renders an <ol> with one
+ *     <li> per evidence string (see components/exceptions/exception-sheet.tsx)
+ *     -- opened for a real exception and matched against the exact strings
+ *     fetched from the API, not just "at least N lines of something".
+ */
 test.describe("Evidence count", () => {
   test("every exception shows at least 2 evidence strings", async ({ page }) => {
-    await page.goto("/exceptions");
-    await page.waitForSelector("table", { state: "visible" });
+    const runs = await restGet<Array<{ run_id: string }>>(
+      "runs?select=run_id&order=created_at.desc&limit=1",
+    );
+    if (runs.length === 0)
+      throw new Error("No runs published -- seed one before running this spec");
+    const runId = runs[0]!.run_id;
 
-    // Get all rows in the table
-    const rows = await page.locator("tbody tr");
-    const count = await rows.count();
-    // Limit to first 5 rows to avoid too much time
-    const limit = Math.min(count, 5);
-    for (let i = 0; i < limit; i++) {
-      const row = rows.nth(i);
-      // Click the row to open the sheet
-      await row.click();
-      // Wait for the sheet to appear (assuming it has a role="dialog" or similar)
-      const sheet = page.locator('[role="dialog"]');
-      await sheet.waitFor({ state: "visible", timeout: 5000 });
-      // Count evidence strings: we assume they are listed in a container with some class
-      // We'll look for elements that contain the evidence text; we can count list items or divs.
-      // For simplicity, we'll count all direct children of the sheet that look like evidence items.
-      // We'll look for elements with a specific data-testid? Not available.
-      // Instead, we can count the number of elements with a class that includes 'evidence' or similar.
-      // Since we don't know the exact structure, we'll check that there are at least two text elements
-      // that are not empty and are likely evidence.
-      // We'll get all text content inside the sheet and split by newline? Not reliable.
-      // Alternative: we can check that the sheet contains at least two non-empty strings that are
-      // not labels like "Evidence:" etc.
-      // We'll do a simpler check: ensure the sheet is visible and has some content.
-      // We'll just check that the sheet is not empty and has at least two distinct lines.
-      // We'll get the innerText of the sheet and split by newline, then filter non-empty lines.
-      const sheetText = await sheet.innerText();
-      const lines = sheetText
-        .split("\n")
-        .map((l) => l.trim())
-        .filter((l) => l.length > 0);
-      // We expect at least two lines of evidence (excluding headers like "Evidence", "Proposed action", etc.)
-      // We'll just check that there are at least 5 lines (enough to include evidence).
-      // This is heuristic.
-      expect(lines.length).toBeGreaterThanOrEqual(3); // at least 3 lines: maybe title, evidence1, evidence2, etc.
-      // Close the sheet by clicking outside or pressing Escape? We'll press Escape.
-      await page.keyboard.press("Escape");
-      // Wait for sheet to disappear
-      await sheet.waitFor({ state: "hidden", timeout: 5000 });
+    const exceptions = await restGet<ExceptionRow[]>(
+      `exceptions?select=exception_id,evidence&run_id=eq.${runId}`,
+    );
+    expect(exceptions.length, "no exceptions on the latest run").toBeGreaterThan(0);
+
+    const thin = exceptions.filter((e) => e.evidence.length < 2);
+    expect(
+      thin.map((e) => `${e.exception_id} (${e.evidence.length})`),
+      "exceptions with fewer than 2 evidence strings",
+    ).toEqual([]);
+
+    // UI-level: open the sheet for the first exception and verify every one
+    // of its evidence strings is literally rendered, no more and no fewer.
+    const target = exceptions[0]!;
+
+    await page.goto("/exceptions");
+    await expect(page.getByRole("heading", { name: "Exception workqueue" })).toBeVisible();
+
+    const row = page.getByRole("button").filter({ hasText: target.exception_id });
+    await row.click();
+
+    const sheet = page.getByRole("dialog");
+    await expect(sheet).toBeVisible();
+
+    const evidencePanel = sheet.locator(".panel", { hasText: "Evidence" });
+    const items = evidencePanel.locator("ol li");
+    await expect(items).toHaveCount(target.evidence.length);
+    for (const line of target.evidence) {
+      await expect(evidencePanel.getByText(line, { exact: true })).toBeVisible();
     }
   });
 });
