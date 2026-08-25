@@ -16,7 +16,7 @@ export function RunSelector() {
       type="button"
       disabled={disabled}
       aria-label="Select reconciliation run"
-      className="flex min-w-56 items-center justify-between gap-3 rounded border border-border bg-surface px-3 py-1.5 text-left transition-colors hover:border-border-strong disabled:cursor-not-allowed disabled:opacity-70"
+      className="flex w-full min-w-0 items-center justify-between gap-3 rounded border border-border bg-surface px-3 py-1.5 text-left transition-colors hover:border-border-strong disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:min-w-56"
     >
       <span className="flex flex-col leading-tight">
         <span className="label-micro">Run</span>

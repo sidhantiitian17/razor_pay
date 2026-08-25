@@ -1,718 +1,706 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
-  }
+    PostgrestVersion: "14.15";
+  };
   public: {
     Tables: {
       agent_calls: {
         Row: {
-          call_id: string
-          cost_usd: number
-          guardrail_reasons: Json
-          guardrail_verdict: string
-          latency_ms: number
-          prompt_redacted: Json
-          response: Json
-          run_id: string
-          seq: number
-          tokens_in: number
-          tokens_out: number
-          tools_used: Json
-          turns: number
-        }
+          call_id: string;
+          cost_usd: number;
+          guardrail_reasons: Json;
+          guardrail_verdict: string;
+          latency_ms: number;
+          prompt_redacted: Json;
+          response: Json;
+          run_id: string;
+          seq: number;
+          tokens_in: number;
+          tokens_out: number;
+          tools_used: Json;
+          turns: number;
+        };
         Insert: {
-          call_id: string
-          cost_usd: number
-          guardrail_reasons?: Json
-          guardrail_verdict: string
-          latency_ms: number
-          prompt_redacted: Json
-          response: Json
-          run_id: string
-          seq: number
-          tokens_in: number
-          tokens_out: number
-          tools_used?: Json
-          turns: number
-        }
+          call_id: string;
+          cost_usd: number;
+          guardrail_reasons?: Json;
+          guardrail_verdict: string;
+          latency_ms: number;
+          prompt_redacted: Json;
+          response: Json;
+          run_id: string;
+          seq: number;
+          tokens_in: number;
+          tokens_out: number;
+          tools_used?: Json;
+          turns: number;
+        };
         Update: {
-          call_id?: string
-          cost_usd?: number
-          guardrail_reasons?: Json
-          guardrail_verdict?: string
-          latency_ms?: number
-          prompt_redacted?: Json
-          response?: Json
-          run_id?: string
-          seq?: number
-          tokens_in?: number
-          tokens_out?: number
-          tools_used?: Json
-          turns?: number
-        }
+          call_id?: string;
+          cost_usd?: number;
+          guardrail_reasons?: Json;
+          guardrail_verdict?: string;
+          latency_ms?: number;
+          prompt_redacted?: Json;
+          response?: Json;
+          run_id?: string;
+          seq?: number;
+          tokens_in?: number;
+          tokens_out?: number;
+          tools_used?: Json;
+          turns?: number;
+        };
         Relationships: [
           {
-            foreignKeyName: "agent_calls_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "agent_calls_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       closures: {
         Row: {
-          action: string
-          after: Json
-          applied_at: string
-          before: Json
-          closure_id: string
-          reversed_at: string | null
-          run_id: string
-          target: string
-        }
+          action: string;
+          after: Json;
+          applied_at: string;
+          before: Json;
+          closure_id: string;
+          reversed_at: string | null;
+          run_id: string;
+          target: string;
+        };
         Insert: {
-          action: string
-          after: Json
-          applied_at?: string
-          before: Json
-          closure_id: string
-          reversed_at?: string | null
-          run_id: string
-          target: string
-        }
+          action: string;
+          after: Json;
+          applied_at?: string;
+          before: Json;
+          closure_id: string;
+          reversed_at?: string | null;
+          run_id: string;
+          target: string;
+        };
         Update: {
-          action?: string
-          after?: Json
-          applied_at?: string
-          before?: Json
-          closure_id?: string
-          reversed_at?: string | null
-          run_id?: string
-          target?: string
-        }
+          action?: string;
+          after?: Json;
+          applied_at?: string;
+          before?: Json;
+          closure_id?: string;
+          reversed_at?: string | null;
+          run_id?: string;
+          target?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "closures_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "closures_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       control_results: {
         Row: {
-          control_name: string
-          created_at: string
-          details: Json
-          id: number
-          passed: boolean
-          run_id: string
-        }
+          control_name: string;
+          created_at: string;
+          details: Json;
+          id: number;
+          passed: boolean;
+          run_id: string;
+        };
         Insert: {
-          control_name: string
-          created_at?: string
-          details: Json
-          id?: never
-          passed: boolean
-          run_id: string
-        }
+          control_name: string;
+          created_at?: string;
+          details: Json;
+          id?: never;
+          passed: boolean;
+          run_id: string;
+        };
         Update: {
-          control_name?: string
-          created_at?: string
-          details?: Json
-          id?: never
-          passed?: boolean
-          run_id?: string
-        }
+          control_name?: string;
+          created_at?: string;
+          details?: Json;
+          id?: never;
+          passed?: boolean;
+          run_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "control_results_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "control_results_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       eval_sweeps: {
         Row: {
-          created_at: string
-          id: number
-          report: Json
-          run_id: string
-          seed: number
-          seed_set: string
-          sweep_type: string
-        }
+          created_at: string;
+          id: number;
+          report: Json;
+          run_id: string;
+          seed: number;
+          seed_set: string;
+          sweep_type: string;
+        };
         Insert: {
-          created_at?: string
-          id?: never
-          report: Json
-          run_id: string
-          seed: number
-          seed_set: string
-          sweep_type: string
-        }
+          created_at?: string;
+          id?: never;
+          report: Json;
+          run_id: string;
+          seed: number;
+          seed_set: string;
+          sweep_type: string;
+        };
         Update: {
-          created_at?: string
-          id?: never
-          report?: Json
-          run_id?: string
-          seed?: number
-          seed_set?: string
-          sweep_type?: string
-        }
+          created_at?: string;
+          id?: never;
+          report?: Json;
+          run_id?: string;
+          seed?: number;
+          seed_set?: string;
+          sweep_type?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "eval_sweeps_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "eval_sweeps_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       exceptions: {
         Row: {
-          assignee: string | null
-          bucket: string
-          evidence: Json
-          exception_id: string
-          proposed_action: string
-          resolution_note: string | null
-          row_ids: Json
-          run_id: string
-          severity: string
-          status: string
-        }
+          assignee: string | null;
+          bucket: string;
+          evidence: Json;
+          exception_id: string;
+          proposed_action: string;
+          resolution_note: string | null;
+          row_ids: Json;
+          run_id: string;
+          severity: string;
+          status: string;
+        };
         Insert: {
-          assignee?: string | null
-          bucket: string
-          evidence?: Json
-          exception_id: string
-          proposed_action: string
-          resolution_note?: string | null
-          row_ids?: Json
-          run_id: string
-          severity: string
-          status?: string
-        }
+          assignee?: string | null;
+          bucket: string;
+          evidence?: Json;
+          exception_id: string;
+          proposed_action: string;
+          resolution_note?: string | null;
+          row_ids?: Json;
+          run_id: string;
+          severity: string;
+          status?: string;
+        };
         Update: {
-          assignee?: string | null
-          bucket?: string
-          evidence?: Json
-          exception_id?: string
-          proposed_action?: string
-          resolution_note?: string | null
-          row_ids?: Json
-          run_id?: string
-          severity?: string
-          status?: string
-        }
+          assignee?: string | null;
+          bucket?: string;
+          evidence?: Json;
+          exception_id?: string;
+          proposed_action?: string;
+          resolution_note?: string | null;
+          row_ids?: Json;
+          run_id?: string;
+          severity?: string;
+          status?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "exceptions_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "exceptions_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       link_decisions: {
         Row: {
-          id: number
-          left_id: string
-          link_type: string
-          outcome: string
-          predicted: boolean
-          right_id: string
-          run_id: string
-          truth: boolean
-        }
+          id: number;
+          left_id: string;
+          link_type: string;
+          outcome: string;
+          predicted: boolean;
+          right_id: string;
+          run_id: string;
+          truth: boolean;
+        };
         Insert: {
-          id?: never
-          left_id: string
-          link_type: string
-          outcome: string
-          predicted: boolean
-          right_id: string
-          run_id: string
-          truth: boolean
-        }
+          id?: never;
+          left_id: string;
+          link_type: string;
+          outcome: string;
+          predicted: boolean;
+          right_id: string;
+          run_id: string;
+          truth: boolean;
+        };
         Update: {
-          id?: never
-          left_id?: string
-          link_type?: string
-          outcome?: string
-          predicted?: boolean
-          right_id?: string
-          run_id?: string
-          truth?: boolean
-        }
+          id?: never;
+          left_id?: string;
+          link_type?: string;
+          outcome?: string;
+          predicted?: boolean;
+          right_id?: string;
+          run_id?: string;
+          truth?: boolean;
+        };
         Relationships: [
           {
-            foreignKeyName: "link_decisions_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "link_decisions_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       match_groups: {
         Row: {
-          agent_turns: number
-          bank_ids: Json
-          confidence: number
-          fields_matched: Json
-          group_id: string
-          kind: string
-          ledger_ids: Json
-          payout_ids: Json
-          reason: string
-          run_id: string
-          source: string
-          tag: string
-          tolerances_used: Json
-        }
+          agent_turns: number;
+          bank_ids: Json;
+          confidence: number;
+          fields_matched: Json;
+          group_id: string;
+          kind: string;
+          ledger_ids: Json;
+          payout_ids: Json;
+          reason: string;
+          run_id: string;
+          source: string;
+          tag: string;
+          tolerances_used: Json;
+        };
         Insert: {
-          agent_turns?: number
-          bank_ids?: Json
-          confidence: number
-          fields_matched?: Json
-          group_id: string
-          kind: string
-          ledger_ids?: Json
-          payout_ids?: Json
-          reason: string
-          run_id: string
-          source: string
-          tag: string
-          tolerances_used?: Json
-        }
+          agent_turns?: number;
+          bank_ids?: Json;
+          confidence: number;
+          fields_matched?: Json;
+          group_id: string;
+          kind: string;
+          ledger_ids?: Json;
+          payout_ids?: Json;
+          reason: string;
+          run_id: string;
+          source: string;
+          tag: string;
+          tolerances_used?: Json;
+        };
         Update: {
-          agent_turns?: number
-          bank_ids?: Json
-          confidence?: number
-          fields_matched?: Json
-          group_id?: string
-          kind?: string
-          ledger_ids?: Json
-          payout_ids?: Json
-          reason?: string
-          run_id?: string
-          source?: string
-          tag?: string
-          tolerances_used?: Json
-        }
+          agent_turns?: number;
+          bank_ids?: Json;
+          confidence?: number;
+          fields_matched?: Json;
+          group_id?: string;
+          kind?: string;
+          ledger_ids?: Json;
+          payout_ids?: Json;
+          reason?: string;
+          run_id?: string;
+          source?: string;
+          tag?: string;
+          tolerances_used?: Json;
+        };
         Relationships: [
           {
-            foreignKeyName: "match_groups_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "match_groups_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       run_requests: {
         Row: {
-          claimed_at: string | null
-          claimed_by: string | null
-          config: Json
-          created_at: string
-          error_message: string | null
-          id: number
-          result_run_id: string | null
-          status: string
-        }
+          claimed_at: string | null;
+          claimed_by: string | null;
+          config: Json;
+          created_at: string;
+          error_message: string | null;
+          id: number;
+          result_run_id: string | null;
+          status: string;
+        };
         Insert: {
-          claimed_at?: string | null
-          claimed_by?: string | null
-          config: Json
-          created_at?: string
-          error_message?: string | null
-          id?: never
-          result_run_id?: string | null
-          status?: string
-        }
+          claimed_at?: string | null;
+          claimed_by?: string | null;
+          config: Json;
+          created_at?: string;
+          error_message?: string | null;
+          id?: never;
+          result_run_id?: string | null;
+          status?: string;
+        };
         Update: {
-          claimed_at?: string | null
-          claimed_by?: string | null
-          config?: Json
-          created_at?: string
-          error_message?: string | null
-          id?: never
-          result_run_id?: string | null
-          status?: string
-        }
+          claimed_at?: string | null;
+          claimed_by?: string | null;
+          config?: Json;
+          created_at?: string;
+          error_message?: string | null;
+          id?: never;
+          result_run_id?: string | null;
+          status?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "run_requests_result_run_id_fkey"
-            columns: ["result_run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "run_requests_result_run_id_fkey";
+            columns: ["result_run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       runs: {
         Row: {
-          completed_at: string | null
-          config: Json
-          created_at: string
-          engine_version: string
-          report: Json | null
-          run_id: string
-          schema_version: string
-          status: string
-        }
+          completed_at: string | null;
+          config: Json;
+          created_at: string;
+          engine_version: string;
+          report: Json | null;
+          run_id: string;
+          schema_version: string;
+          status: string;
+        };
         Insert: {
-          completed_at?: string | null
-          config: Json
-          created_at?: string
-          engine_version: string
-          report?: Json | null
-          run_id?: string
-          schema_version?: string
-          status?: string
-        }
+          completed_at?: string | null;
+          config: Json;
+          created_at?: string;
+          engine_version: string;
+          report?: Json | null;
+          run_id?: string;
+          schema_version?: string;
+          status?: string;
+        };
         Update: {
-          completed_at?: string | null
-          config?: Json
-          created_at?: string
-          engine_version?: string
-          report?: Json | null
-          run_id?: string
-          schema_version?: string
-          status?: string
-        }
-        Relationships: []
-      }
+          completed_at?: string | null;
+          config?: Json;
+          created_at?: string;
+          engine_version?: string;
+          report?: Json | null;
+          run_id?: string;
+          schema_version?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
       source_bank: {
         Row: {
-          amount_paise: number
-          bank_id: string
-          currency: string
-          narration: string
-          posted_at: string
-          run_id: string
-          utr: string | null
-          value_date: string
-        }
+          amount_paise: number;
+          bank_id: string;
+          currency: string;
+          narration: string;
+          posted_at: string;
+          run_id: string;
+          utr: string | null;
+          value_date: string;
+        };
         Insert: {
-          amount_paise: number
-          bank_id: string
-          currency?: string
-          narration: string
-          posted_at: string
-          run_id: string
-          utr?: string | null
-          value_date: string
-        }
+          amount_paise: number;
+          bank_id: string;
+          currency?: string;
+          narration: string;
+          posted_at: string;
+          run_id: string;
+          utr?: string | null;
+          value_date: string;
+        };
         Update: {
-          amount_paise?: number
-          bank_id?: string
-          currency?: string
-          narration?: string
-          posted_at?: string
-          run_id?: string
-          utr?: string | null
-          value_date?: string
-        }
+          amount_paise?: number;
+          bank_id?: string;
+          currency?: string;
+          narration?: string;
+          posted_at?: string;
+          run_id?: string;
+          utr?: string | null;
+          value_date?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "source_bank_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "source_bank_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       source_ledger: {
         Row: {
-          account: string
-          amount_paise: number
-          currency: string
-          entry_date: string
-          journal_id: string
-          ledger_id: string
-          reference: string
-          run_id: string
-        }
+          account: string;
+          amount_paise: number;
+          currency: string;
+          entry_date: string;
+          journal_id: string;
+          ledger_id: string;
+          reference: string;
+          run_id: string;
+        };
         Insert: {
-          account: string
-          amount_paise: number
-          currency?: string
-          entry_date: string
-          journal_id: string
-          ledger_id: string
-          reference: string
-          run_id: string
-        }
+          account: string;
+          amount_paise: number;
+          currency?: string;
+          entry_date: string;
+          journal_id: string;
+          ledger_id: string;
+          reference: string;
+          run_id: string;
+        };
         Update: {
-          account?: string
-          amount_paise?: number
-          currency?: string
-          entry_date?: string
-          journal_id?: string
-          ledger_id?: string
-          reference?: string
-          run_id?: string
-        }
+          account?: string;
+          amount_paise?: number;
+          currency?: string;
+          entry_date?: string;
+          journal_id?: string;
+          ledger_id?: string;
+          reference?: string;
+          run_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "source_ledger_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "source_ledger_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       source_payout: {
         Row: {
-          amount_paise: number
-          created_at: string
-          currency: string
-          fee_paise: number
-          payout_id: string
-          run_id: string
-          settled_at: string | null
-          status: string
-          tax_paise: number
-          utr: string | null
-        }
+          amount_paise: number;
+          created_at: string;
+          currency: string;
+          fee_paise: number;
+          payout_id: string;
+          run_id: string;
+          settled_at: string | null;
+          status: string;
+          tax_paise: number;
+          utr: string | null;
+        };
         Insert: {
-          amount_paise: number
-          created_at: string
-          currency?: string
-          fee_paise?: number
-          payout_id: string
-          run_id: string
-          settled_at?: string | null
-          status: string
-          tax_paise?: number
-          utr?: string | null
-        }
+          amount_paise: number;
+          created_at: string;
+          currency?: string;
+          fee_paise?: number;
+          payout_id: string;
+          run_id: string;
+          settled_at?: string | null;
+          status: string;
+          tax_paise?: number;
+          utr?: string | null;
+        };
         Update: {
-          amount_paise?: number
-          created_at?: string
-          currency?: string
-          fee_paise?: number
-          payout_id?: string
-          run_id?: string
-          settled_at?: string | null
-          status?: string
-          tax_paise?: number
-          utr?: string | null
-        }
+          amount_paise?: number;
+          created_at?: string;
+          currency?: string;
+          fee_paise?: number;
+          payout_id?: string;
+          run_id?: string;
+          settled_at?: string | null;
+          status?: string;
+          tax_paise?: number;
+          utr?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "source_payout_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "source_payout_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
+        ];
+      };
       truth_groups: {
         Row: {
-          bank_ids: Json
-          cohort: string
-          expected_bucket: string | null
-          expected_outcome: string
-          expected_tag: string | null
-          group_id: string
-          kind: string
-          ledger_ids: Json
-          payout_ids: Json
-          run_id: string
-        }
+          bank_ids: Json;
+          cohort: string;
+          expected_bucket: string | null;
+          expected_outcome: string;
+          expected_tag: string | null;
+          group_id: string;
+          kind: string;
+          ledger_ids: Json;
+          payout_ids: Json;
+          run_id: string;
+        };
         Insert: {
-          bank_ids?: Json
-          cohort: string
-          expected_bucket?: string | null
-          expected_outcome: string
-          expected_tag?: string | null
-          group_id: string
-          kind: string
-          ledger_ids?: Json
-          payout_ids?: Json
-          run_id: string
-        }
+          bank_ids?: Json;
+          cohort: string;
+          expected_bucket?: string | null;
+          expected_outcome: string;
+          expected_tag?: string | null;
+          group_id: string;
+          kind: string;
+          ledger_ids?: Json;
+          payout_ids?: Json;
+          run_id: string;
+        };
         Update: {
-          bank_ids?: Json
-          cohort?: string
-          expected_bucket?: string | null
-          expected_outcome?: string
-          expected_tag?: string | null
-          group_id?: string
-          kind?: string
-          ledger_ids?: Json
-          payout_ids?: Json
-          run_id?: string
-        }
+          bank_ids?: Json;
+          cohort?: string;
+          expected_bucket?: string | null;
+          expected_outcome?: string;
+          expected_tag?: string | null;
+          group_id?: string;
+          kind?: string;
+          ledger_ids?: Json;
+          payout_ids?: Json;
+          run_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "truth_groups_run_id_fkey"
-            columns: ["run_id"]
-            isOneToOne: false
-            referencedRelation: "runs"
-            referencedColumns: ["run_id"]
+            foreignKeyName: "truth_groups_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["run_id"];
           },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   public: {
     Enums: {},
   },
-} as const
+} as const;
