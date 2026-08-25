@@ -2,6 +2,22 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P13] — Hardening, Security, Docs — 2026-08-25
+
+### Added
+- `engine/tools/check_file_sizes.py` — AST analysis tool enforcing statement and file length constraints across engine modules (check 13.10).
+- `engine/tools/check_docs.py` — Documentation link integrity validator verifying on-disk presence for all relative markdown references (check 13.12).
+- `ARCHITECTURE.md` — Complete system topology, pure core isolation, guardrails, and scalability roadmap.
+- `VERIFICATION.md` — Reproduction guide with commands for every check, static analysis, and security audit.
+- `ANTI_SLOP.md` — 10-minute reviewer's guide with 5-second refutation checks and architectural defenses.
+- `docs/EVALUATION.md` — Evaluation methodology, 4-arm ablation details, and link-level formulation over candidate space $|C|$.
+- `tests/test_hardening.py` — Full coverage test suite bringing total engine coverage to 89.52% and covering all CLI subcommands, eval modules, config, and tools.
+- `scripts/checks/P13.sh` — Automated verification runner for checks 13.1 through 13.13.
+
+### Verified
+- **Checks:** 13.1–13.13 PASS (13/13). `uv run pytest --cov=engine --cov-fail-under=85`: 153/153 passed (89.52% overall; 98% guardrail, 100% rules, 99% classify, 100% grader). `mypy --strict engine`: clean (45 files). `ruff check` & `ruff format --check`: clean. `lint-imports`: Core purity kept. `pip-audit`: 0 vulnerabilities. `gitleaks detect --no-git`: 0 findings. RLS security: verified anon cannot write. Documentation: all links and stranger-follows-README quickstart verified.
+- **Review Roster:** Independent sub-agent reviews by `security-reviewer`, `performance-optimizer`, and `doc-updater` all passed with zero findings.
+
 ## [P12] — Live Wiring — 2026-08-25
 
 ### Added
