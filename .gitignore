@@ -10,6 +10,8 @@ reports/*.json
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+.mutmut-cache
+
 
 # ui/ (TanStack Start) build/dep artifacts
 ui/node_modules/

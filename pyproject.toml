@@ -22,6 +22,7 @@ dev = [
     "import-linter>=2.0,<3",
     "pip-audit>=2.7,<3",
     "types-jsonschema>=4.23,<5",
+    "mutmut>=2.4.4,<3",
 ]
 llm = [
     "anthropic>=0.34,<1",
