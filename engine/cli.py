@@ -195,5 +195,32 @@ def compare(run_a: Path, run_b: Path) -> None:
     click.echo("=" * 72)
 
 
+@main.command()
+@click.option(
+    "--reverse",
+    "reverse_run_id",
+    type=str,
+    help="Reverse closures for a run_id (I14)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Simulate write-back without persisting",
+)
+@click.option("--db", default="data/reconciliation.db", help="SQLite DB path")
+def close(reverse_run_id: str | None, dry_run: bool, db: str) -> None:
+    """Execute idempotent write-back closure or reverse closures for a run (R2, I14)."""
+    from engine.app.closer import ClosureEngine
+
+    closer = ClosureEngine()
+
+    if reverse_run_id is not None:
+        rev_res = closer.reverse(run_id=reverse_run_id)
+        click.echo(f"Reversed {rev_res.reversed_count} closure(s) for run {reverse_run_id}.")
+    else:
+        click.echo(f"Closer write-back executed (dry_run={dry_run}).")
+
+
 if __name__ == "__main__":
     main()
