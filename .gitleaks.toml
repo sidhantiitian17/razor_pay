@@ -22,3 +22,14 @@ paths = [
   '''(^|/)UI-main/\.env$''',
   '''(^|/)ui/\.env$''',
 ]
+
+regexes = [
+  # The same Supabase publishable/anon key above, hardcoded (not read from
+  # .env) in tests_ui/*.spec.ts -- Playwright doesn't load .env by default,
+  # so these specs pin the literal value ui/.env already ships. It is the
+  # exact public, RLS-gated, client-side key the deployed UI itself embeds
+  # in its built JS bundle for every browser; matching it here by its exact
+  # value (not a wildcard "sb_publishable_*" pattern) keeps this allowlist
+  # from also swallowing a real leaked key of a different project.
+  '''sb_publishable_LXQj3IBK6t9AZgn6TQJOmQ_eNqEvfat''',
+]
