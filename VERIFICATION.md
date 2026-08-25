@@ -39,8 +39,14 @@ ALL PHASES PASSED
 | **P4** | Classifier & State Closer | `bash scripts/checks/P4.sh` | 9-bucket reachability, dry-run, closure reversal |
 | **P5** | Grader & Evaluation Sweep | `bash scripts/checks/P5.sh` | 4-arm ablation lift, 6 negative controls, worst-seed bar |
 | **P6** | Persistence, Worker, Pub | `bash scripts/checks/P6.sh` | Zero secret leak, atomic row claim, idempotent write |
+| **P7** | Shell & A11y Verification | `(cd ui && bun x playwright test tests_ui/shell.spec.ts tests_ui/a11y.spec.ts)` | WCAG AA compliance, responsive layout, theme toggle |
+| **P8** | Dashboard No-Fabrication | `(cd ui && bun x playwright test tests_ui/no_fabrication.spec.ts)` | Zero fabricated KPI values against published report |
+| **P9** | Workqueue & Triage Evidence | `(cd ui && bun x playwright test tests_ui/drilldown.spec.ts tests_ui/evidence.spec.ts tests_ui/workqueue_count.spec.ts)` | Source row drilldown, >=2 evidence strings per row |
+| **P10** | Trace & Anti-Slop Verify | `(cd ui && bun x playwright test tests_ui/anti_slop.spec.ts)` | 8 anti-slop checks verified live on DOM |
+| **P11** | Eval Lab & Holdout Gate | `bash scripts/checks/P11.sh` | Worst holdout seed matches gate value, dev seeds labelled tuning |
 | **P12** | Live Wiring Integration | `bash scripts/checks/P12.sh` | DOM-vs-JSON crosscheck, triage isolation, 2nd-pass convergence |
 | **P13** | Hardening, Security, Docs | `bash scripts/checks/P13.sh` | File sizes, doc links, static analysis, audit zero-leak |
+
 
 ---
 

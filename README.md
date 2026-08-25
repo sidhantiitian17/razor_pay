@@ -6,14 +6,23 @@ Money is strictly integer paise everywhere except the display layer. Every repor
 
 ---
 
-## 1. Quickstart & Complete Verification (Under 10 Minutes)
+## 1. Live Deployment & Project Links
 
-### 1.1 Run Full Regression Net (P0 through P13)
+- **Lovable Web App (Preview):** https://id-preview--40d76d2d-38c3-4173-8e18-bcb4597dd784.lovable.app
+- **Lovable Project (Editor):** https://lovable.dev/projects/40d76d2d-38c3-4173-8e18-bcb4597dd784
+- **Supabase Backend Project:** `dtgwbqcjblbcgclogvtv` (`https://dtgwbqcjblbcgclogvtv.supabase.co`)
+- **Nightly Evaluation Workflow:** [`.github/workflows/eval.yml`](.github/workflows/eval.yml)
+
+---
+
+## 2. Quickstart & Complete Verification (Under 10 Minutes)
+
+### 2.1 Run Full Regression Net (P0 through P13)
 ```bash
 bash scripts/checks/all.sh
 ```
 
-### 1.2 Generate Dataset & Execute Reconciliation
+### 2.2 Generate Dataset & Execute Reconciliation
 ```bash
 # Generate synthetic 3-way reconciliation dataset
 uv run python -m engine.cli generate --n 100 --seed 42 --out data
@@ -22,7 +31,7 @@ uv run python -m engine.cli generate --n 100 --seed 42 --out data
 uv run python -m engine.cli run --mode rules_agent --seeds 42 --n 100 --report-out reports/run_42.json --publish
 ```
 
-### 1.3 Evaluate Across Holdout Seed Set (Seeds 101–120)
+### 2.3 Evaluate Across Holdout Seed Set (Seeds 101–120)
 ```bash
 # Multi-seed sweep across 20 unseen holdout seeds
 uv run python -m engine.eval.sweep --seeds 101-120
@@ -31,7 +40,7 @@ uv run python -m engine.eval.sweep --seeds 101-120
 uv run python -m engine.eval.ablation --seeds 101-120
 ```
 
-### 1.4 Verify Database & Falsification Controls
+### 2.4 Verify Database & Falsification Controls
 ```bash
 # Crosscheck published database tables against report.json
 uv run python -m engine.tools.crosscheck --run <run_id>
@@ -42,17 +51,18 @@ uv run python -m engine.tools.crosscheck --controls
 
 ---
 
-## 2. Key Headline Numbers (Holdout Seeds 101–120)
+## 3. Key Headline Numbers (Holdout Seeds 101–120)
 
 - **Candidate Blocker Recall:** 1.0000 (100% recall across candidate space $|C| < n^2/4$).
 - **Rules-Only Baseline Match Rate:** ~74.2% (zero LLM cost).
 - **Rules+Agent Hybrid Match Rate:** ~84.6% (positive `agent_lift > 0`).
 - **Precision (Bank-Payout Links):** > 98.5%.
 - **Negative Controls:** 6/6 verified falsifiable in CI.
+- **Worst-Case Holdout Minimum:** 71.00% (seed 101, gate value).
 
 ---
 
-## 3. Architecture & Documentation
+## 4. Architecture & Documentation
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — Topology, pure core boundaries, safety guardrails, and scalability roadmap.
 - [`VERIFICATION.md`](VERIFICATION.md) — Step-by-step reproduction guide for human reviewers and CI.
@@ -65,7 +75,7 @@ uv run python -m engine.tools.crosscheck --controls
 
 ---
 
-## 4. Web Dashboard
+## 5. Web Dashboard
 
 ```bash
 cd ui

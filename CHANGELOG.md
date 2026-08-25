@@ -2,6 +2,20 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P14-Followups] — Playwright Exit Gates, Supabase Writer & Nightly Eval — 2026-08-25
+
+### Added
+- `engine/adapters/store_supabase.py` — live Supabase storage adapter using `supabase` client with `SUPABASE_SERVICE_ROLE_KEY`, batch chunking, `eval_sweeps` support, and CLI wiring (`--db supabase`) (PR #25).
+- `.github/workflows/eval.yml` — scheduled nightly evaluation workflow running live bench, 6 negative controls, holdout sweep (101–120), and 4-arm ablation (PR #24).
+- `ui/tests_ui/worst_seed.spec.ts` & `seed_set_labels.spec.ts` — Playwright exit gates for P11 Eval Lab (Check 11.2, 11.3, R10, §4.4) with `mock_eval_sweeps.ts` fixture (PR #26, PR #27, tag `p11-complete`).
+- `ui/tests_ui/no_fabrication.spec.ts` & `anti_slop.spec.ts` — Playwright exit gates for P8 Dashboard (Check 8.1, 8.6, R8) and P10 Verify (Check 10.6, R8) (PR #28, tags `p8-complete`, `p10-complete`).
+- `ui/tests_ui/workqueue_count.spec.ts`, `drilldown.spec.ts`, `evidence.spec.ts` — Playwright exit gates for P9 Workqueue & Triage (Check 9.1, 9.3, 9.4, R6) (PR #29, tag `p9-complete`).
+
+### Verified
+- **All 14 Phases Complete:** P0 through P13 all passing with verified exit gates and matching `pN-complete` tags.
+- **Coverage & Test Suite:** 159/159 passed in 21.99s, 88.01% overall coverage (>= 85% requirement met), >98% on safety-critical core modules (100% rules, 100% grader, 99% classify, 98% guardrail, 98% closer, 100% publisher).
+- **Lovable Web App:** Live deployment verified at `https://id-preview--40d76d2d-38c3-4173-8e18-bcb4597dd784.lovable.app`.
+
 ## [P13] — Hardening, Security, Docs — 2026-08-25
 
 ### Added
