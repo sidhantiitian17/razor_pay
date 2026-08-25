@@ -16,6 +16,10 @@ class SQLiteStorageAdapter:
 
     def __init__(self, db_path: Path | str = ":memory:") -> None:
         self.db_path = str(db_path)
+        if self.db_path != ":memory:":
+            from pathlib import Path
+
+            Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._lock = threading.Lock()
         self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row

@@ -81,6 +81,8 @@ def test_cli_commands(tmp_path: Path) -> None:
             "--report-out",
             str(report_file),
             "--publish",
+            "--db",
+            str(tmp_path / "test.db"),
         ],
     )
     assert res_run.exit_code == 0
