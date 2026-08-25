@@ -164,3 +164,48 @@ def test_no_llm() -> None:
     assert "anthropic" not in code
     assert "openai" not in code
     assert "LLMClient" not in code
+
+
+def test_partial_group_kinds() -> None:
+    """Test duplicate and refund pair partial group classification."""
+    dataset = generate_dataset(n=60, seed=42)
+    classifier = ExceptionClassifier()
+
+    dup_partial = MatchGroup(
+        group_id="MG-DUP-PARTIAL",
+        kind=GroupKind.DUPLICATE_SET,
+        bank_ids=[dataset.bank_txns[0].bank_id],
+        payout_ids=[dataset.gateway_payouts[0].payout_id],  # only 1 payout instead of 2
+        ledger_ids=[],
+        confidence=0.5,
+        source="deterministic",
+        fields_matched=[],
+        tolerances_used=[],
+        tag=ResolvedTag.CLEAN,
+        reason="Duplicate partial mismatch",
+        agent_turns=0,
+    )
+
+    ref_partial = MatchGroup(
+        group_id="MG-REF-PARTIAL",
+        kind=GroupKind.REFUND_PAIR,
+        bank_ids=[],
+        payout_ids=[dataset.gateway_payouts[0].payout_id],
+        ledger_ids=[dataset.ledger_entries[0].ledger_id],  # only 1 ledger instead of 4
+        confidence=0.5,
+        source="deterministic",
+        fields_matched=[],
+        tolerances_used=[],
+        tag=ResolvedTag.REFUND,
+        reason="Refund partial mismatch",
+        agent_turns=0,
+    )
+
+    exceptions = classifier.classify(
+        bank_txns=dataset.bank_txns,
+        gateway_payouts=dataset.gateway_payouts,
+        ledger_entries=dataset.ledger_entries,
+        matched_groups=[dup_partial, ref_partial],
+    )
+    partial_excs = [e for e in exceptions if e.bucket == UnresolvedBucket.PARTIAL_GROUP]
+    assert len(partial_excs) == 2
