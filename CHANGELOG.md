@@ -2,6 +2,22 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P6] — Persistence, Publisher, Worker — 2026-08-25
+
+### Added
+- `engine/ports/store.py` — Storage port protocol defining atomic run, source, truth, match, exception, closure, telemetry, and queue persistence operations (§5.2, §6).
+- `engine/adapters/store_memory.py` — Thread-safe in-memory storage adapter with row-locking request claiming and comprehensive table dumps.
+- `engine/adapters/store_sqlite.py` — Thread-safe SQLite storage adapter mapping to Supabase schema with idempotent `INSERT OR REPLACE` upserts and atomic queue claims.
+- `engine/app/publisher.py` — Report and dataset publisher sanitizing authentication secrets/tokens (check 6.2), ensuring idempotent upserts (check 6.3), and supporting negative control results (check 6.8).
+- `engine/app/worker.py` — Background queue worker with atomic row-lock claim semantics (check 6.4) and guaranteed `failed` error status transitions on failure (check 6.5).
+- `engine/cli.py` — Added `--publish` flag to `run` command (check 6.7) and background `worker` command.
+- `scripts/checks/P6.sh` — Automated verification runner for checks 6.1 through 6.8.
+- `tests/test_publisher.py`, `tests/test_worker.py` — Comprehensive unit test suites for round-trip persistence, secret sanitization, idempotency, worker concurrency, and failure handling.
+
+### Verified
+- **Checks:** 6.1–6.8 PASS (8/8). `uv run pytest tests/ -q`: 138/138 passed (100% coverage on publisher, 93% on reporter, 97% on closer, 98% on guardrail). `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean. `lint-imports`: Core purity kept. `gitleaks detect --no-git`: 0 findings. `pip-audit`: 0 vulnerabilities.
+- **Exit gate:** 6.2 (no secrets/tokens in published tables) and 6.6 (anon writes denied across all tables) verified.
+
 ## [P5] — Grader, Reporter, Eval Harness — 2026-08-25
 
 ### Added
