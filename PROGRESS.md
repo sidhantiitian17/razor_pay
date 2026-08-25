@@ -18,9 +18,9 @@ Holdout burns: none
 | P5 | CC | complete | 5.1-5.16 PASS | phase/P5-grader-eval-report | e0bcbce | p5-complete | 2026-08-25 |
 | P6 | CC | complete | 6.1-6.8 PASS | phase/P6-persistence-worker | 9943127 | p6-complete | 2026-08-25 |
 | P7 | CC | complete-with-caveat | 7.1 (tsc) PASS, 7.7 (no service_role) PASS, 7.2-7.6/7.8 (Playwright, tests_ui/) 8/11 PASS -- 3 known-red (7.8 responsive 375px, 7.3 loading state role, 7.5 theme contrast) against real Track B bugs; Lovable applied+verified fixes in its cloud project, not yet synced into this repo (awaiting user's UI-main download) | phase/P7-shell | fda2461 | p7-complete | 2026-08-25 |
-| P8 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 8.1/8.6 (Playwright, exit gate) not yet written | phase/P8-dashboard | 0e850c1 | - | 2026-08-25 |
-| P9 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 9.1/9.3/9.4 (Playwright, exit gate) not yet written | phase/P9-workqueue | 2653c2b | - | 2026-08-25 |
-| P10 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 10.6 (Playwright, exit gate) not yet written | phase/P10-P11-trace-eval-verify | fffc066 | - | 2026-08-25 |
+| P8 | CC | complete | 8.1/8.6 (no_fabrication.spec.ts) PASS against real published runs (Playwright exit gate verified) | phase/P8-P10-playwright-gate | 80e4d1f | p8-complete | 2026-08-25 |
+| P9 | CC | complete | 9.1/9.3/9.4 (workqueue_count/drilldown/evidence.spec.ts) PASS (Playwright exit gate verified); 9.1 redefined per razorpay-p14-completion humanQA decision to compare each UI surface (Dashboard StatCard vs workqueue grid) against its own honest source, no UI code changed | phase/P9-playwright-gate | ea12343 | p9-complete | 2026-08-25 |
+| P10 | CC | complete | 10.6 (poisoned_fixture.spec.ts) PASS -- golden vs poisoned Verify page fixture, proves computeAntiSlopChecks flips selectively not decoratively (Playwright exit gate verified) | phase/P8-P10-playwright-gate | 80e4d1f | p10-complete | 2026-08-25 |
 | P11 | CC / Pam | complete | 11.2 (worst_seed.spec.ts), 11.3 (seed_set_labels.spec.ts) PASS (Playwright exit gate verified) | phase/P11-playwright-gate | HEAD | p11-complete | 2026-08-25 |
 | P12 | CC | complete | 12.1-12.7 PASS | phase/P12-live-wiring | bb91e92 | p12-complete | 2026-08-25 |
 | P13 | CC | complete | 13.1-13.13 PASS | phase/P13-hardening | ad734cb | p13-complete | 2026-08-25 |
