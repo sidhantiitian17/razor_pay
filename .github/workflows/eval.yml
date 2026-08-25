@@ -1,0 +1,123 @@
+name: Nightly Evaluation & Benchmarks
+
+on:
+  schedule:
+    # 02:00 UTC every night
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      # 5.11: Live throughput and latency benchmark (median of 3 runs across concurrency 1, 4, 8)
+      - name: Run Live Benchmark (5.11)
+        run: uv run python -m engine.eval.bench --runs 3 --n 100 --live --output reports/bench.json
+
+      # 5.14: 6 Negative controls verification
+      - name: Run Negative Controls (5.14)
+        run: uv run python -m engine.eval.controls --all --output reports/control_results.json
+
+      # 5.5: Multi-seed holdout sweep across seeds 101-120
+      - name: Run Holdout Sweep (5.5)
+        run: uv run python -m engine.eval.sweep --seeds 101-120 --n 100 --output reports/sweep.json
+
+      # 5.7: 4-Arm ablation harness (rules_only, agent_only, rules_agent, random)
+      - name: Run 4-Arm Ablation (5.7)
+        run: uv run python -m engine.eval.ablation --seeds 101-120 --n 100 --output reports/ablation.json
+
+      # Build consolidated summary markdown report
+      - name: Generate Evaluation Summary Report
+        run: |
+          python3 - << 'EOF'
+          import json
+          from pathlib import Path
+
+          sweep_path = Path("reports/sweep.json")
+          ablation_path = Path("reports/ablation.json")
+          bench_path = Path("reports/bench.json")
+          controls_path = Path("reports/control_results.json")
+
+          sweep = json.loads(sweep_path.read_text(encoding="utf-8")) if sweep_path.exists() else {}
+          ablation = json.loads(ablation_path.read_text(encoding="utf-8")) if ablation_path.exists() else {}
+          bench = json.loads(bench_path.read_text(encoding="utf-8")) if bench_path.exists() else {}
+          controls = json.loads(controls_path.read_text(encoding="utf-8")) if controls_path.exists() else {}
+
+          lines = [
+              "# Nightly Reconciliation Engine Evaluation Report",
+              "",
+              "## 1. Multi-Seed Holdout Sweep (Seeds 101–120)",
+              f"- **Seeds Tested:** {len(sweep.get('seeds', []))} holdout seeds",
+              f"- **Mean Match Rate:** {sweep.get('summary', {}).get('match_rate', {}).get('mean', 'N/A')}",
+              f"- **Min Match Rate (Worst-Seed Gate):** {sweep.get('summary', {}).get('match_rate', {}).get('min', 'N/A')}",
+              f"- **Stdev:** {sweep.get('summary', {}).get('match_rate', {}).get('stdev', 'N/A')}",
+              f"- **Mean Precision:** {sweep.get('summary', {}).get('precision', {}).get('mean', 'N/A')}",
+              "",
+              "## 2. 4-Arm Ablation Analysis",
+              f"- **Agent Lift:** {ablation.get('agent_lift', {}).get('value', 'N/A')}",
+              f"- **Precision Cost:** {ablation.get('precision_cost', 'N/A')}",
+              "",
+              "| Arm | Match Rate | Precision | Cost USD |",
+              "|---|---|---|---|",
+          ]
+
+          arms = ablation.get("arms", {})
+          for arm_name, arm_data in arms.items():
+              lines.append(f"| `{arm_name}` | {arm_data.get('match_rate')} | {arm_data.get('precision')} | ${arm_data.get('cost_usd', 0.0):.4f} |")
+
+          lines.extend([
+              "",
+              "## 3. Live Throughput Benchmark",
+              f"- **Runs Measured:** {bench.get('runs', 3)}",
+              f"- **Batch Size:** {bench.get('n', 100)} records",
+              "",
+              "| Concurrency | Throughput (rows/s) | Residuals/s | Wall Clock (s) |",
+              "|---|---|---|---|",
+          ])
+
+          for conc, cdata in bench.get("concurrency_results", {}).items():
+              lines.append(f"| {conc} | {cdata.get('rows_per_second_median')} | {cdata.get('residuals_per_second_median')} | {cdata.get('wall_clock_seconds_median')}s |")
+
+          lines.extend([
+              "",
+              "## 4. Negative Controls Verification",
+              "",
+              "| Control | Status | Detail |",
+              "|---|---|---|",
+          ])
+
+          for cname, cdata in controls.items():
+              status = "✅ PASS" if cdata.get("passed") else "❌ FAIL"
+              detail = cdata.get("detail", str(cdata))
+              lines.append(f"| `{cname}` | {status} | {detail} |")
+
+          report_md = "\n".join(lines) + "\n"
+          Path("reports/report.md").write_text(report_md, encoding="utf-8")
+          print(report_md)
+          EOF
+          cat reports/report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Evaluation Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-eval-report
+          path: reports/

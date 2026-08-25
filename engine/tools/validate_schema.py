@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from jsonschema.validators import Draft202012Validator
+from jsonschema.validators import Draft202012Validator  # type: ignore[import-untyped]
 
 
 def main() -> None:
