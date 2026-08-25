@@ -2,6 +2,18 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P12] — Live Wiring — 2026-08-25
+
+### Added
+- `engine/tools/crosscheck.py` — DOM-vs-JSON and relational database crosscheck verification tool (`--run <id>`, `--controls`) guaranteeing zero UI fabrication against published `report.json` and verifying all 6 negative controls (checks 12.2, 12.7, R8, §4.6).
+- `engine/cli.py` — Added `close --reverse <run_id>` command restoring entity state before closure and setting `reversed_at` timestamp (check 12.4, R2, I14).
+- `scripts/checks/P12.sh` — Automated verification runner for checks 12.1 through 12.7.
+- `tests/test_live_wiring.py` — Integration test suite verifying worker request lifecycle (`run_requests` -> `runs`, check 12.1), crosscheck database integrity (check 12.2), triage mutation isolation preserving frozen measurements (check 12.3, R2), closure reversal (check 12.4), smoke wiring (check 12.5), second-pass convergence (check 12.6, R2), and negative controls verification (check 12.7).
+
+### Verified
+- **Checks:** 12.1–12.7 PASS (7/7). `uv run pytest tests/ -q`: 145/145 passed. `ruff check` / `ruff format --check`: clean. `mypy --strict engine`: clean (43 files). `lint-imports`: Core purity kept. `gitleaks detect --no-git`: 0 findings. `pip-audit`: 0 vulnerabilities.
+- **Master DoD advances:** R2 (loop closes: applied, reversible, never on unresolved, converges on second pass), R6 (triage never mutates measurement), R7 (queue worker lifecycle), R8 (crosscheck verification).
+
 ## [P6] — Persistence, Publisher, Worker — 2026-08-25
 
 ### Added

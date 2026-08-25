@@ -22,6 +22,8 @@ Holdout burns: none
 | P9 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 9.1/9.3/9.4 (Playwright, exit gate) not yet written | phase/P9-workqueue | 2653c2b | - | 2026-08-25 |
 | P10 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 10.6 (Playwright, exit gate) not yet written | phase/P10-P11-trace-eval-verify | fffc066 | - | 2026-08-25 |
 | P11 | CC | in_progress | tsc PASS, eslint PASS, no service_role PASS; 11.2/11.3 (Playwright, exit gate) not yet written | phase/P10-P11-trace-eval-verify | fffc066 | - | 2026-08-25 |
+| P12 | CC | in_progress | 12.1-12.7 PASS | phase/P12-live-wiring | - | - | 2026-08-25 |
+| P13 | CC | not_started | - | - | - | - | - |
 
 ## Blockers
 (none)
