@@ -21,10 +21,10 @@ const ROUTES: NavRoute[] = [
 
 export function SidebarNav() {
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
-      <div className="flex h-14 items-center gap-2 border-b border-sidebar-border px-4">
-        <span className="size-2 rounded-sm bg-primary" aria-hidden="true" />
-        <div className="leading-tight">
+    <aside className="flex w-14 shrink-0 flex-col border-r border-sidebar-border bg-sidebar sm:w-56">
+      <div className="flex h-14 items-center justify-center gap-2 border-b border-sidebar-border px-2 sm:justify-start sm:px-4">
+        <span className="size-2 rounded-sm bg-primary text-primary-foreground" aria-hidden="true" />
+        <div className="hidden leading-tight sm:block">
           <div className="text-sm font-semibold tracking-tight text-sidebar-foreground">RECON</div>
           <div className="label-micro">3-way settlement</div>
         </div>
@@ -36,18 +36,20 @@ export function SidebarNav() {
             key={to}
             to={to}
             activeOptions={{ exact }}
-            className="group flex items-center gap-2.5 rounded px-2.5 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-accent-foreground data-[status=active]:shadow-[inset_2px_0_0_0_var(--sidebar-primary)]"
+            aria-label={label}
+
+            className="group flex items-center justify-center gap-2.5 rounded px-2 py-2 sm:justify-start sm:px-2.5 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-accent-foreground data-[status=active]:shadow-[inset_2px_0_0_0_var(--sidebar-primary)]"
           >
             <Icon
               className="size-4 text-muted-foreground group-data-[status=active]:text-sidebar-primary"
               aria-hidden="true"
             />
-            {label}
+            <span className="hidden sm:inline">{label}</span>
           </Link>
         ))}
       </nav>
 
-      <div className="border-t border-sidebar-border p-3">
+      <div className="hidden border-t border-sidebar-border p-3 sm:block">
         <div className="label-micro">Amounts</div>
         <div className="tnum text-xs text-muted-foreground">integer paise · INR at display</div>
       </div>

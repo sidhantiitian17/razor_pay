@@ -61,11 +61,11 @@ export function RevealItem({ children }: { children: ReactNode }) {
 
 export function PanelSkeleton({ rows = 6 }: { rows?: number | undefined }) {
   return (
-    <div className="panel p-4" aria-busy="true" aria-live="polite">
-      <div className="mb-4 flex gap-6">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-8 w-40" />
+    <div className="panel p-4" role="status" aria-busy="true" aria-live="polite">
+      <div className="mb-4 flex min-w-0 gap-3 sm:gap-6">
+        <Skeleton className="h-8 w-full max-w-40" />
+        <Skeleton className="h-8 w-full max-w-40" />
+        <Skeleton className="h-8 w-full max-w-40" />
       </div>
       <div className="grid gap-2">
         {Array.from({ length: rows }, (_, index) => (
