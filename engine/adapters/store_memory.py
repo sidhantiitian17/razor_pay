@@ -127,6 +127,27 @@ class MemoryStorageAdapter:
                 rec["run_id"] = run_id
                 self._tables["closures"][str(rec["closure_id"])] = rec
 
+    def save_eval_sweeps(self, run_id: str, sweeps: list[dict[str, Any]]) -> None:
+        """Persist eval sweep rows."""
+        with self._lock:
+            for sw in sweeps:
+                rec = copy.deepcopy(sw)
+                rec["run_id"] = run_id
+                key = f"{run_id}_{rec['seed']}"
+                self._tables["eval_sweeps"][key] = rec
+
+    def get_eval_sweeps(self, run_id: str) -> list[dict[str, Any]]:
+        """Retrieve eval sweep rows for a run."""
+        with self._lock:
+            return sorted(
+                [
+                    copy.deepcopy(r)
+                    for r in self._tables["eval_sweeps"].values()
+                    if r.get("run_id") == run_id
+                ],
+                key=lambda x: int(x.get("seed", 0)),
+            )
+
     def save_control_results(self, run_id: str, control_results: list[dict[str, Any]]) -> None:
         """Persist negative control results."""
         with self._lock:

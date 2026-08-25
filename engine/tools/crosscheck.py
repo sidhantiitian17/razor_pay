@@ -111,7 +111,12 @@ def main() -> None:
     parser.add_argument("--db", default="data/reconciliation.db", help="SQLite DB path")
 
     args = parser.parse_args()
-    store = SQLiteStorageAdapter(db_path=args.db)
+    if args.db.lower() == "supabase":
+        from engine.adapters.store_supabase import SupabaseStorageAdapter
+
+        store: StoragePort = SupabaseStorageAdapter()
+    else:
+        store = SQLiteStorageAdapter(db_path=args.db)
 
     if args.controls:
         res = crosscheck_controls(run_id=args.run, store=store)

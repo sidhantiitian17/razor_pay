@@ -154,6 +154,16 @@ class SQLiteStorageAdapter:
                     reversed_at TEXT
                 );
 
+                CREATE TABLE IF NOT EXISTS eval_sweeps (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT NOT NULL,
+                    sweep_type TEXT NOT NULL,
+                    seed INTEGER NOT NULL,
+                    seed_set TEXT NOT NULL,
+                    report TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+                );
+
                 CREATE TABLE IF NOT EXISTS control_results (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     run_id TEXT NOT NULL,
@@ -445,6 +455,49 @@ class SQLiteStorageAdapter:
                         json.dumps(cr.get("details", {})),
                     ),
                 )
+
+    def save_eval_sweeps(self, run_id: str, sweeps: list[dict[str, Any]]) -> None:
+        """Persist eval sweep rows for a run."""
+        with self._lock, self._conn:
+            for sw in sweeps:
+                self._conn.execute(
+                    """
+                    INSERT INTO eval_sweeps (run_id, sweep_type, seed, seed_set, report)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (
+                        run_id,
+                        str(sw["sweep_type"]),
+                        int(sw["seed"]),
+                        str(sw["seed_set"]),
+                        json.dumps(sw.get("report", {})),
+                    ),
+                )
+
+    def get_eval_sweeps(self, run_id: str) -> list[dict[str, Any]]:
+        """Retrieve eval sweep rows for a run."""
+        with self._lock:
+            cur = self._conn.cursor()
+            cur.execute(
+                """
+                SELECT id, run_id, sweep_type, seed, seed_set, report, created_at
+                FROM eval_sweeps WHERE run_id = ? ORDER BY seed ASC
+                """,
+                (run_id,),
+            )
+            rows = cur.fetchall()
+            return [
+                {
+                    "id": r["id"],
+                    "run_id": r["run_id"],
+                    "sweep_type": r["sweep_type"],
+                    "seed": r["seed"],
+                    "seed_set": r["seed_set"],
+                    "report": json.loads(r["report"]),
+                    "created_at": r["created_at"],
+                }
+                for r in rows
+            ]
 
     def get_control_results(self, run_id: str) -> list[dict[str, Any]]:
         """Retrieve control results for a run."""

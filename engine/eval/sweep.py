@@ -162,6 +162,11 @@ def main() -> None:
     parser.add_argument(
         "--output", default="reports/sweep.json", help="Output path for sweep report"
     )
+    parser.add_argument("--publish", action="store_true", help="Publish sweep rows to storage")
+    parser.add_argument(
+        "--db", default="data/reconciliation.db", help="Target DB path or 'supabase'"
+    )
+    parser.add_argument("--run-id", default=None, help="Associated run ID to link sweeps")
 
     args = parser.parse_args()
     seeds = _parse_seeds(args.seeds)
@@ -169,6 +174,38 @@ def main() -> None:
 
     run_sweep(seeds=seeds, n=args.n, mode=args.mode, output_path=output_p)
     print(f"Saved seed sweep report to {output_p}")
+
+    if args.publish:
+        from typing import cast
+
+        from engine.cli import _resolve_storage_adapter
+
+        store = _resolve_storage_adapter(db=args.db)
+        generator = ReportGenerator()
+        run_id = args.run_id or "00000000-0000-0000-0000-000000000000"
+        sweep_rows: list[dict[str, Any]] = []
+        typed_mode = cast("Literal['rules_only', 'agent_only', 'rules_agent', 'random']", args.mode)
+        for s in seeds:
+            s_set = "holdout" if 101 <= s <= 120 else "dev" if 1 <= s <= 10 else "regression"
+            typed_set = cast("Literal['dev', 'holdout', 'regression']", s_set)
+            dset = generate_dataset(n=args.n, seed=s)
+            s_rep = generator.generate_report(
+                dataset=dset,
+                mode=typed_mode,
+                seed=s,
+                seed_set=typed_set,
+                dry_run=True,
+            )
+            sweep_rows.append(
+                {
+                    "sweep_type": "holdout_sweep" if s_set == "holdout" else "dev_sweep",
+                    "seed": s,
+                    "seed_set": s_set,
+                    "report": s_rep,
+                }
+            )
+        store.save_eval_sweeps(run_id=run_id, sweeps=sweep_rows)
+        print(f"Published {len(sweep_rows)} sweep rows to {args.db} for run {run_id}")
 
 
 if __name__ == "__main__":
