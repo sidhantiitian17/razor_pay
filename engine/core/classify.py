@@ -119,7 +119,9 @@ class ExceptionClassifier:
         for p in unmatched_payouts:
             if p.payout_id in duplicate_payout_ids and p.payout_id not in processed_payouts:
                 same_payouts = payouts_by_utr_amt[(p.utr, p.amount_paise)]
-                p_ids = [sp.payout_id for sp in same_payouts]
+                p_ids = [
+                    sp.payout_id for sp in same_payouts if sp.payout_id not in matched_payout_ids
+                ]
                 for pid in p_ids:
                     processed_payouts.add(pid)
                 # Find any associated bank
