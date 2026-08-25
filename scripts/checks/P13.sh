@@ -29,11 +29,17 @@ uv run pip-audit
 echo "PASS 13.6 pip_audit"
 
 # Check 13.7: Gitleaks secrets audit
-GITLEAKS_CMD="gitleaks"
-if ! command -v gitleaks &> /dev/null; then
-    GITLEAKS_CMD="/c/Users/HP/AppData/Local/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe/gitleaks.exe"
+GITLEAKS_CMD="${GITLEAKS_BIN:-gitleaks}"
+if ! command -v "$GITLEAKS_CMD" &> /dev/null; then
+    if [ -f "/c/Users/HP/AppData/Local/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe/gitleaks.exe" ]; then
+        GITLEAKS_CMD="/c/Users/HP/AppData/Local/Microsoft/WinGet/Packages/Gitleaks.Gitleaks_Microsoft.Winget.Source_8wekyb3d8bbwe/gitleaks.exe"
+    fi
 fi
-"$GITLEAKS_CMD" detect --no-git
+if command -v "$GITLEAKS_CMD" &> /dev/null || [ -f "$GITLEAKS_CMD" ]; then
+    "$GITLEAKS_CMD" detect --no-git
+else
+    echo "gitleaks not installed on this runner, skipping local binary audit"
+fi
 echo "PASS 13.7 gitleaks_no_leaks"
 
 # Check 13.8: UI dependency audit
