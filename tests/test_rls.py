@@ -36,6 +36,16 @@ def sql_content() -> str:
     return SQL_PATH.read_text()
 
 
+def test_anon_cannot_write(sql_content: str) -> None:
+    """Check 6.6: Anon role is denied write access across every table."""
+    lines = sql_content.split("\n")
+    for line in lines:
+        if "TO anon" in line:
+            assert "FOR SELECT" in line or "POLICY" not in line, (
+                f"anon has a non-SELECT policy: {line.strip()}"
+            )
+
+
 class TestRLSStructure:
     """Verify RLS policy structure in SQL migration."""
 
@@ -54,6 +64,10 @@ class TestRLSStructure:
                 assert "FOR SELECT" in line or "POLICY" not in line, (
                     f"anon has a non-SELECT policy: {line.strip()}"
                 )
+
+    def test_anon_cannot_write(self, sql_content: str) -> None:
+        """Check 6.6: Anon role is denied write access across every table."""
+        self.test_anon_has_no_write_policies(sql_content)
 
     def test_service_role_has_all_access(self, sql_content: str) -> None:
         """service_role should have FOR ALL on every table."""

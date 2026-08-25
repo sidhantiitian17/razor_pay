@@ -81,8 +81,12 @@ def _classify_seed_set(seed: int) -> str:
     type=click.Path(path_type=Path),
     help="Output path for the report JSON",
 )
-def run(mode: str, seeds: str, n: int, report_out: Path) -> None:
+@click.option("--publish", is_flag=True, default=False, help="Publish results to storage")
+def run(mode: str, seeds: str, n: int, report_out: Path, publish: bool) -> None:
     """Run the reconciliation pipeline."""
+    from engine.adapters.store_sqlite import SQLiteStorageAdapter
+    from engine.app.publisher import ReportPublisher
+
     seed_list = _parse_seeds(seeds)
     click.echo(f"Running mode={mode} across {len(seed_list)} seed(s)...")
 
@@ -101,6 +105,30 @@ def run(mode: str, seeds: str, n: int, report_out: Path) -> None:
 
     write_baseline_report(report, report_out)
     click.echo(f"Baseline report successfully published to {report_out}")
+
+    if publish:
+        store = SQLiteStorageAdapter(db_path="data/reconciliation.db")
+        publisher = ReportPublisher(store=store)
+        publisher.publish(dataset=dataset, report=report)
+        click.echo("Published reconciliation dataset and report to database.")
+
+
+@main.command()
+@click.option("--once", is_flag=True, default=False, help="Process one task and exit")
+@click.option("--db", default="data/reconciliation.db", help="SQLite DB path")
+def worker(once: bool, db: str) -> None:
+    """Run background queue worker to process run requests."""
+    from engine.adapters.store_sqlite import SQLiteStorageAdapter
+    from engine.app.worker import ReconciliationWorker
+
+    store = SQLiteStorageAdapter(db_path=db)
+    w = ReconciliationWorker(store=store)
+    if once:
+        processed = w.run_once()
+        click.echo(f"Worker executed task: {processed}")
+    else:
+        click.echo("Starting worker polling loop...")
+        w.run_loop()
 
 
 @main.command()
