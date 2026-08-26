@@ -10,21 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AgentTraceRouteImport } from './routes/agent-trace'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as EvalLabRouteImport } from './routes/eval-lab'
-import { Route as ExceptionsRouteImport } from './routes/exceptions'
-import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as AuthenticatedAgentTraceRouteImport } from './routes/_authenticated/agent-trace'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEvalLabRouteImport } from './routes/_authenticated/eval-lab'
+import { Route as AuthenticatedExceptionsRouteImport } from './routes/_authenticated/exceptions'
+import { Route as AuthenticatedRunsRouteImport } from './routes/_authenticated/runs'
+import { Route as AuthenticatedVerifyRouteImport } from './routes/_authenticated/verify'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AgentTraceRoute = AgentTraceRouteImport.update({
-  id: '/agent-trace',
-  path: '/agent-trace',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -32,93 +33,107 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
+const AuthenticatedAgentTraceRoute = AuthenticatedAgentTraceRouteImport.update({
+  id: '/agent-trace',
+  path: '/agent-trace',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const EvalLabRoute = EvalLabRouteImport.update({
+const AuthenticatedEvalLabRoute = AuthenticatedEvalLabRouteImport.update({
   id: '/eval-lab',
   path: '/eval-lab',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ExceptionsRoute = ExceptionsRouteImport.update({
+const AuthenticatedExceptionsRoute = AuthenticatedExceptionsRouteImport.update({
   id: '/exceptions',
   path: '/exceptions',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const VerifyRoute = VerifyRouteImport.update({
+const AuthenticatedRunsRoute = AuthenticatedRunsRouteImport.update({
+  id: '/runs',
+  path: '/runs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVerifyRoute = AuthenticatedVerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/agent-trace': typeof AgentTraceRoute
   '/auth': typeof AuthRoute
-  '/dashboard': typeof DashboardRoute
-  '/eval-lab': typeof EvalLabRoute
-  '/exceptions': typeof ExceptionsRoute
-  '/verify': typeof VerifyRoute
+  '/agent-trace': typeof AuthenticatedAgentTraceRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/eval-lab': typeof AuthenticatedEvalLabRoute
+  '/exceptions': typeof AuthenticatedExceptionsRoute
+  '/runs': typeof AuthenticatedRunsRoute
+  '/verify': typeof AuthenticatedVerifyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/agent-trace': typeof AgentTraceRoute
   '/auth': typeof AuthRoute
-  '/dashboard': typeof DashboardRoute
-  '/eval-lab': typeof EvalLabRoute
-  '/exceptions': typeof ExceptionsRoute
-  '/verify': typeof VerifyRoute
+  '/agent-trace': typeof AuthenticatedAgentTraceRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/eval-lab': typeof AuthenticatedEvalLabRoute
+  '/exceptions': typeof AuthenticatedExceptionsRoute
+  '/runs': typeof AuthenticatedRunsRoute
+  '/verify': typeof AuthenticatedVerifyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/agent-trace': typeof AgentTraceRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/dashboard': typeof DashboardRoute
-  '/eval-lab': typeof EvalLabRoute
-  '/exceptions': typeof ExceptionsRoute
-  '/verify': typeof VerifyRoute
+  '/_authenticated/agent-trace': typeof AuthenticatedAgentTraceRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/eval-lab': typeof AuthenticatedEvalLabRoute
+  '/_authenticated/exceptions': typeof AuthenticatedExceptionsRoute
+  '/_authenticated/runs': typeof AuthenticatedRunsRoute
+  '/_authenticated/verify': typeof AuthenticatedVerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/agent-trace'
     | '/auth'
+    | '/agent-trace'
     | '/dashboard'
     | '/eval-lab'
     | '/exceptions'
+    | '/runs'
     | '/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/agent-trace'
     | '/auth'
+    | '/agent-trace'
     | '/dashboard'
     | '/eval-lab'
     | '/exceptions'
+    | '/runs'
     | '/verify'
   id:
     | '__root__'
     | '/'
-    | '/agent-trace'
+    | '/_authenticated'
     | '/auth'
-    | '/dashboard'
-    | '/eval-lab'
-    | '/exceptions'
-    | '/verify'
+    | '/_authenticated/agent-trace'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/eval-lab'
+    | '/_authenticated/exceptions'
+    | '/_authenticated/runs'
+    | '/_authenticated/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AgentTraceRoute: typeof AgentTraceRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  DashboardRoute: typeof DashboardRoute
-  EvalLabRoute: typeof EvalLabRoute
-  ExceptionsRoute: typeof ExceptionsRoute
-  VerifyRoute: typeof VerifyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -130,11 +145,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agent-trace': {
-      id: '/agent-trace'
-      path: '/agent-trace'
-      fullPath: '/agent-trace'
-      preLoaderRoute: typeof AgentTraceRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -144,45 +159,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
+    '/_authenticated/agent-trace': {
+      id: '/_authenticated/agent-trace'
+      path: '/agent-trace'
+      fullPath: '/agent-trace'
+      preLoaderRoute: typeof AuthenticatedAgentTraceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/eval-lab': {
-      id: '/eval-lab'
+    '/_authenticated/eval-lab': {
+      id: '/_authenticated/eval-lab'
       path: '/eval-lab'
       fullPath: '/eval-lab'
-      preLoaderRoute: typeof EvalLabRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedEvalLabRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/exceptions': {
-      id: '/exceptions'
+    '/_authenticated/exceptions': {
+      id: '/_authenticated/exceptions'
       path: '/exceptions'
       fullPath: '/exceptions'
-      preLoaderRoute: typeof ExceptionsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedExceptionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/verify': {
-      id: '/verify'
+    '/_authenticated/runs': {
+      id: '/_authenticated/runs'
+      path: '/runs'
+      fullPath: '/runs'
+      preLoaderRoute: typeof AuthenticatedRunsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/verify': {
+      id: '/_authenticated/verify'
       path: '/verify'
       fullPath: '/verify'
-      preLoaderRoute: typeof VerifyRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedVerifyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAgentTraceRoute: typeof AuthenticatedAgentTraceRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEvalLabRoute: typeof AuthenticatedEvalLabRoute
+  AuthenticatedExceptionsRoute: typeof AuthenticatedExceptionsRoute
+  AuthenticatedRunsRoute: typeof AuthenticatedRunsRoute
+  AuthenticatedVerifyRoute: typeof AuthenticatedVerifyRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAgentTraceRoute: AuthenticatedAgentTraceRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEvalLabRoute: AuthenticatedEvalLabRoute,
+  AuthenticatedExceptionsRoute: AuthenticatedExceptionsRoute,
+  AuthenticatedRunsRoute: AuthenticatedRunsRoute,
+  AuthenticatedVerifyRoute: AuthenticatedVerifyRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AgentTraceRoute: AgentTraceRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  DashboardRoute: DashboardRoute,
-  EvalLabRoute: EvalLabRoute,
-  ExceptionsRoute: ExceptionsRoute,
-  VerifyRoute: VerifyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

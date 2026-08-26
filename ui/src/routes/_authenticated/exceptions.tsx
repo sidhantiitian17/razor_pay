@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { DataSurface } from "@/components/shell/data-surface";
 import { PageHeader, RevealItem, StagedReveal } from "@/components/shell/page-states";
+import { ProductShell } from "@/components/shell/product-shell";
 import { ExceptionSheet } from "@/components/exceptions/exception-sheet";
 import { ExceptionTable } from "@/components/exceptions/exception-table";
 import { FilterBar, type FacetOption } from "@/components/exceptions/filter-bar";
@@ -14,7 +15,7 @@ import { useRunReport } from "@/lib/use-run-report";
 import { UNRESOLVED_STATUSES, useExceptions, type ExceptionRow } from "@/lib/use-exceptions";
 import { useTriage, type TriageAction } from "@/lib/use-triage";
 
-export const Route = createFileRoute("/exceptions")({
+export const Route = createFileRoute("/_authenticated/exceptions")({
   head: () => ({
     meta: [
       { title: "Exceptions — Settlement Reconciliation" },
@@ -32,8 +33,16 @@ export const Route = createFileRoute("/exceptions")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ExceptionsPage,
+  component: ExceptionsRoute,
 });
+
+function ExceptionsRoute() {
+  return (
+    <ProductShell>
+      <ExceptionsPage />
+    </ProductShell>
+  );
+}
 
 function facets(rows: ExceptionRow[], key: keyof ExceptionRow): FacetOption[] {
   const counts = new Map<string, number>();

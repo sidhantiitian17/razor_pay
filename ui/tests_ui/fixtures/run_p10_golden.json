@@ -167,9 +167,7 @@
       "exception_id": "EX-0001",
       "proposed_action": "Investigate gateway retry or duplicate payout submission",
       "resolution_note": null,
-      "row_ids": [
-        "pout_SYNTH00000080"
-      ],
+      "row_ids": ["pout_SYNTH00000080"],
       "severity": "high",
       "status": "open"
     },
@@ -185,9 +183,7 @@
       "exception_id": "EX-0002",
       "proposed_action": "Investigate gateway retry or duplicate payout submission",
       "resolution_note": null,
-      "row_ids": [
-        "pout_SYNTH00000082"
-      ],
+      "row_ids": ["pout_SYNTH00000082"],
       "severity": "high",
       "status": "open"
     },
@@ -203,9 +199,7 @@
       "exception_id": "EX-0003",
       "proposed_action": "Investigate gateway retry or duplicate payout submission",
       "resolution_note": null,
-      "row_ids": [
-        "pout_SYNTH00000084"
-      ],
+      "row_ids": ["pout_SYNTH00000084"],
       "severity": "high",
       "status": "open"
     },
@@ -221,9 +215,7 @@
       "exception_id": "EX-0004",
       "proposed_action": "Investigate gateway retry or duplicate payout submission",
       "resolution_note": null,
-      "row_ids": [
-        "pout_SYNTH00000086"
-      ],
+      "row_ids": ["pout_SYNTH00000086"],
       "severity": "high",
       "status": "open"
     },
@@ -239,9 +231,7 @@
       "exception_id": "EX-0005",
       "proposed_action": "Investigate gateway retry or duplicate payout submission",
       "resolution_note": null,
-      "row_ids": [
-        "pout_SYNTH00000088"
-      ],
+      "row_ids": ["pout_SYNTH00000088"],
       "severity": "high",
       "status": "open"
     },
@@ -257,9 +247,7 @@
       "exception_id": "EX-0006",
       "proposed_action": "Trace credit with bank; no payout found within +/-7d",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000088"
-      ],
+      "row_ids": ["BNK-000088"],
       "severity": "high",
       "status": "open"
     },
@@ -275,9 +263,7 @@
       "exception_id": "EX-0007",
       "proposed_action": "Trace credit with bank; no payout found within +/-7d",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000089"
-      ],
+      "row_ids": ["BNK-000089"],
       "severity": "high",
       "status": "open"
     },
@@ -293,9 +279,7 @@
       "exception_id": "EX-0008",
       "proposed_action": "Trace credit with bank; no payout found within +/-7d",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000090"
-      ],
+      "row_ids": ["BNK-000090"],
       "severity": "high",
       "status": "open"
     },
@@ -311,12 +295,7 @@
       "exception_id": "EX-0009",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000257",
-        "LED-000258",
-        "LED-000259",
-        "LED-000260"
-      ],
+      "row_ids": ["LED-000257", "LED-000258", "LED-000259", "LED-000260"],
       "severity": "low",
       "status": "open"
     },
@@ -332,12 +311,7 @@
       "exception_id": "EX-0010",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000261",
-        "LED-000262",
-        "LED-000263",
-        "LED-000264"
-      ],
+      "row_ids": ["LED-000261", "LED-000262", "LED-000263", "LED-000264"],
       "severity": "low",
       "status": "open"
     },
@@ -353,12 +327,7 @@
       "exception_id": "EX-0011",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000265",
-        "LED-000266",
-        "LED-000267",
-        "LED-000268"
-      ],
+      "row_ids": ["LED-000265", "LED-000266", "LED-000267", "LED-000268"],
       "severity": "low",
       "status": "open"
     },
@@ -374,12 +343,7 @@
       "exception_id": "EX-0012",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000269",
-        "LED-000270",
-        "LED-000271",
-        "LED-000272"
-      ],
+      "row_ids": ["LED-000269", "LED-000270", "LED-000271", "LED-000272"],
       "severity": "low",
       "status": "open"
     },
@@ -395,12 +359,7 @@
       "exception_id": "EX-0013",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000273",
-        "LED-000274",
-        "LED-000275",
-        "LED-000276"
-      ],
+      "row_ids": ["LED-000273", "LED-000274", "LED-000275", "LED-000276"],
       "severity": "low",
       "status": "open"
     },
@@ -416,12 +375,7 @@
       "exception_id": "EX-0014",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000397",
-        "LED-000398",
-        "LED-000399",
-        "LED-000400"
-      ],
+      "row_ids": ["LED-000397", "LED-000398", "LED-000399", "LED-000400"],
       "severity": "low",
       "status": "open"
     },
@@ -437,12 +391,7 @@
       "exception_id": "EX-0015",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000401",
-        "LED-000402",
-        "LED-000403",
-        "LED-000404"
-      ],
+      "row_ids": ["LED-000401", "LED-000402", "LED-000403", "LED-000404"],
       "severity": "low",
       "status": "open"
     },
@@ -458,12 +407,7 @@
       "exception_id": "EX-0016",
       "proposed_action": "Investigate unbalanced or unlinked ledger journal set",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000405",
-        "LED-000406",
-        "LED-000407",
-        "LED-000408"
-      ],
+      "row_ids": ["LED-000405", "LED-000406", "LED-000407", "LED-000408"],
       "severity": "low",
       "status": "open"
     },
@@ -479,12 +423,7 @@
       "exception_id": "EX-0017",
       "proposed_action": "Locate original settlement journal for refund reversal",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000373",
-        "LED-000374",
-        "LED-000375",
-        "LED-000376"
-      ],
+      "row_ids": ["LED-000373", "LED-000374", "LED-000375", "LED-000376"],
       "severity": "medium",
       "status": "open"
     },
@@ -500,12 +439,7 @@
       "exception_id": "EX-0018",
       "proposed_action": "Locate original settlement journal for refund reversal",
       "resolution_note": null,
-      "row_ids": [
-        "LED-000377",
-        "LED-000378",
-        "LED-000379",
-        "LED-000380"
-      ],
+      "row_ids": ["LED-000377", "LED-000378", "LED-000379", "LED-000380"],
       "severity": "medium",
       "status": "open"
     },
@@ -521,10 +455,7 @@
       "exception_id": "EX-0019",
       "proposed_action": "Confirm value date settlement lag (>2d)",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000065",
-        "pout_SYNTH00000065"
-      ],
+      "row_ids": ["BNK-000065", "pout_SYNTH00000065"],
       "severity": "medium",
       "status": "open"
     },
@@ -540,10 +471,7 @@
       "exception_id": "EX-0020",
       "proposed_action": "Confirm value date settlement lag (>2d)",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000066",
-        "pout_SYNTH00000066"
-      ],
+      "row_ids": ["BNK-000066", "pout_SYNTH00000066"],
       "severity": "medium",
       "status": "open"
     },
@@ -559,10 +487,7 @@
       "exception_id": "EX-0021",
       "proposed_action": "Confirm value date settlement lag (>2d)",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000067",
-        "pout_SYNTH00000067"
-      ],
+      "row_ids": ["BNK-000067", "pout_SYNTH00000067"],
       "severity": "medium",
       "status": "open"
     },
@@ -578,10 +503,7 @@
       "exception_id": "EX-0022",
       "proposed_action": "Confirm value date settlement lag (>2d)",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000068",
-        "pout_SYNTH00000068"
-      ],
+      "row_ids": ["BNK-000068", "pout_SYNTH00000068"],
       "severity": "medium",
       "status": "open"
     },
@@ -597,10 +519,7 @@
       "exception_id": "EX-0023",
       "proposed_action": "Confirm value date settlement lag (>2d)",
       "resolution_note": null,
-      "row_ids": [
-        "BNK-000069",
-        "pout_SYNTH00000069"
-      ],
+      "row_ids": ["BNK-000069", "pout_SYNTH00000069"],
       "severity": "medium",
       "status": "open"
     }

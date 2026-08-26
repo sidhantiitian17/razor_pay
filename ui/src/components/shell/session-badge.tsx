@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 import { useAuth } from "@/hooks/use-auth";
 
-/** Session-driven affordance: reads work anonymously, triage needs a session. */
+/** Session-driven affordance: every recon surface requires a session. */
 export function SessionBadge() {
   const { session, assigneeLabel, loading } = useAuth();
 
@@ -12,7 +12,7 @@ export function SessionBadge() {
     <Link
       to="/auth"
       className="flex max-w-48 items-center gap-2 rounded border border-border bg-surface px-2.5 py-1.5 transition-colors hover:border-border-strong"
-      title={session ? "Signed in — triage enabled" : "Sign in to triage exceptions"}
+      title={session ? "Signed in — triage enabled" : "Sign in to open the console"}
     >
       <span
         className={`size-1.5 rounded-full ${session ? "bg-matched" : "bg-muted-foreground"}`}

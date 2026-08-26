@@ -2,10 +2,11 @@ import { test, expect, type Page } from "@playwright/test";
 
 import seed5Fixture from "./fixtures/run_dev_seed5.json" with { type: "json" };
 
-// Matches ui/.env -- publishable/anon key, read-only under RLS, same
-// credential the deployed UI itself uses.
-const SUPABASE_URL = "https://dtgwbqcjblbcgclogvtv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_LXQj3IBK6t9AZgn6TQJOmQ_eNqEvfat";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, signInTestOperator } from "./auth-helpers";
+
+// RLS now requires a signed-in operator (anon has no SELECT grant) -- see
+// auth-helpers.ts.
+let cachedToken: string | undefined;
 
 // en-IN grouping, matching src/lib/format.ts's `formatCount`.
 const integer = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
@@ -22,9 +23,10 @@ function unresolvedTotal(unresolved: Record<string, number>): number {
  * not a static copy that could drift from whatever is actually latest.
  */
 async function fetchLatestRun(): Promise<typeof seed5Fixture> {
+  cachedToken ??= (await signInTestOperator()).access_token;
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/runs?select=report&order=created_at.desc&limit=1`,
-    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } },
+    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${cachedToken}` } },
   );
   if (!res.ok) throw new Error(`Supabase REST fetch failed: ${res.status} ${await res.text()}`);
   const rows = (await res.json()) as Array<{ report: typeof seed5Fixture }>;

@@ -6,11 +6,12 @@ import { CountUp, RateCard, StatCard } from "@/components/dashboard/stat-card";
 import { VocabularyBars } from "@/components/dashboard/vocabulary-bars";
 import { DataSurface, type SurfaceStatus } from "@/components/shell/data-surface";
 import { PageHeader, RevealItem, StagedReveal } from "@/components/shell/page-states";
+import { ProductShell } from "@/components/shell/product-shell";
 import { formatCount } from "@/lib/format";
 import { useRunReport } from "@/lib/use-run-report";
 import type { ReconciliationReport, UnresolvedMap } from "@/types/report";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Run Dashboard — Settlement Reconciliation" },
@@ -29,8 +30,16 @@ export const Route = createFileRoute("/dashboard")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: DashboardPage,
+  component: DashboardRoute,
 });
+
+function DashboardRoute() {
+  return (
+    <ProductShell>
+      <DashboardPage />
+    </ProductShell>
+  );
+}
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -84,7 +93,7 @@ function DashboardPage() {
 
 function SeedBadge({ report }: { report: ReconciliationReport }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
       <div className="rounded border border-border bg-surface px-3 py-1.5">
         <div className="label-micro">Seed</div>
         <div className="tnum text-sm text-foreground">{formatCount(report.config.seed)}</div>

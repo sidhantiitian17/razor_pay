@@ -29,12 +29,31 @@ async function fetchRuns(): Promise<RunListRow[]> {
   return data ?? [];
 }
 
+async function fetchRunCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from("runs")
+    .select("run_id", { count: "exact", head: true });
+
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 /** Runs available to the comparison selectors, newest first. */
 export function useRuns() {
   return useQuery({
     queryKey: ["runs", "list"] as const,
     queryFn: fetchRuns,
     enabled: isBackendConfigured(),
+    staleTime: 30_000,
+  });
+}
+
+/** Exact row count for public live stats; not derived from the bounded runs list. */
+export function useRunCount(enabled = true) {
+  return useQuery({
+    queryKey: ["runs", "count"] as const,
+    queryFn: fetchRunCount,
+    enabled: enabled && isBackendConfigured(),
     staleTime: 30_000,
   });
 }

@@ -15,12 +15,16 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex items-end justify-between gap-4 border-b border-border pb-4">
-      <div>
+    <div className="mb-5 flex w-full min-w-0 flex-col items-start gap-4 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
         <h1 className="text-lg font-semibold tracking-tight text-foreground">{title}</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
       </div>
-      {actions}
+      {actions ? (
+        <div className="flex max-w-full flex-wrap items-center justify-start gap-2 sm:justify-end">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -37,7 +41,7 @@ export function StagedReveal({ children }: { children: ReactNode }) {
         hidden: {},
         shown: { transition: { staggerChildren: reduced ? 0 : 0.05 } },
       }}
-      className="grid gap-4"
+      className="grid min-w-0 gap-4"
     >
       {children}
     </motion.div>
@@ -49,6 +53,7 @@ export function RevealItem({ children }: { children: ReactNode }) {
 
   return (
     <motion.div
+      className="min-w-0"
       variants={{
         hidden: { opacity: 0, y: reduced ? 0 : 6 },
         shown: { opacity: 1, y: 0, transition: { duration: reduced ? 0 : 0.22 } },

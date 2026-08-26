@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CheckRow, VerdictBadge } from "@/components/verify/check-row";
 import { DataSurface, type SurfaceStatus } from "@/components/shell/data-surface";
 import { PageHeader, RevealItem, StagedReveal } from "@/components/shell/page-states";
+import { ProductShell } from "@/components/shell/product-shell";
 import { formatCount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -16,7 +17,7 @@ import { useExceptions } from "@/lib/use-exceptions";
 import { useRunReport } from "@/lib/use-run-report";
 import { useClosures, useControlResults } from "@/lib/use-verify-inputs";
 
-export const Route = createFileRoute("/verify")({
+export const Route = createFileRoute("/_authenticated/verify")({
   head: () => ({
     meta: [
       { title: "Verify — Settlement Reconciliation" },
@@ -35,8 +36,16 @@ export const Route = createFileRoute("/verify")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: VerifyPage,
+  component: VerifyRoute,
 });
+
+function VerifyRoute() {
+  return (
+    <ProductShell>
+      <VerifyPage />
+    </ProductShell>
+  );
+}
 
 function VerifyPage() {
   const run = useRunReport();
@@ -84,7 +93,7 @@ function VerifyPage() {
           description="Every verdict below is computed at render time from the fetched rows and prints the evidence that produced it. No check is written as a constant in the page."
           actions={
             report ? (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
                 <div className="rounded border border-border bg-surface px-3 py-1.5">
                   <div className="label-micro">Seed</div>
                   <div className="tnum text-sm text-foreground">

@@ -52,9 +52,14 @@ function StackedVocabularyChart({
   for (const item of series) row[item.label] = values[item.key] ?? 0;
 
   return (
-    <div className="h-72 w-full">
+    <div className="h-72 w-full [&_.recharts-surface]:bg-transparent [&_.recharts-wrapper]:bg-transparent">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={[row]} layout="vertical" margin={{ top: 8, right: 12, bottom: 0, left: 8 }}>
+        <BarChart
+          data={[row]}
+          layout="vertical"
+          margin={{ top: 8, right: 12, bottom: 0, left: 8 }}
+          className="bg-transparent"
+        >
           <CartesianGrid stroke="var(--color-grid)" horizontal={false} />
           <XAxis
             type="number"

@@ -5,13 +5,14 @@ import { CallSheet } from "@/components/trace/call-sheet";
 import { CallTimeline } from "@/components/trace/call-timeline";
 import { DataSurface, type SurfaceStatus } from "@/components/shell/data-surface";
 import { PageHeader, RevealItem, StagedReveal } from "@/components/shell/page-states";
+import { ProductShell } from "@/components/shell/product-shell";
 import { formatCount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { totalAgentCalls, useAgentCalls, type AgentCallRow } from "@/lib/use-agent-calls";
 import { useRunReport } from "@/lib/use-run-report";
 import type { ReconciliationReport } from "@/types/report";
 
-export const Route = createFileRoute("/agent-trace")({
+export const Route = createFileRoute("/_authenticated/agent-trace")({
   head: () => ({
     meta: [
       { title: "Agent Trace — Settlement Reconciliation" },
@@ -30,8 +31,16 @@ export const Route = createFileRoute("/agent-trace")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AgentTracePage,
+  component: AgentTraceRoute,
 });
+
+function AgentTraceRoute() {
+  return (
+    <ProductShell>
+      <AgentTracePage />
+    </ProductShell>
+  );
+}
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",

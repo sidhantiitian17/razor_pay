@@ -62,8 +62,11 @@ function contrastRatio(color1: string, color2: string): number {
 
 test.describe("Theme", () => {
   test("both themes render and have sufficient contrast", async ({ page }) => {
+    // "/" is the public landing page (dark-only by design, no theme toggle
+    // mounted there) -- the actual light/dark toggle lives in the
+    // authenticated app shell, so test against a real authenticated route.
     // Test light theme
-    await page.goto("/");
+    await page.goto("/dashboard");
     await page.emulateMedia({ colorScheme: "light" });
     await page.reload();
     // Wait for theme to apply

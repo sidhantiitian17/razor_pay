@@ -20,9 +20,7 @@ export function TriageActions({
     return (
       <div className="panel grid gap-2 p-3">
         <div className="label-micro">Triage</div>
-        <p className="text-xs text-muted-foreground">
-          Triage writes require a signed-in session. Reads stay available with the anon key.
-        </p>
+        <p className="text-xs text-muted-foreground">Triage writes require a signed-in session.</p>
         <Link
           to="/auth"
           className="inline-flex w-fit items-center rounded border border-border bg-surface px-3 py-1.5 text-xs text-foreground transition-colors hover:border-border-strong"
