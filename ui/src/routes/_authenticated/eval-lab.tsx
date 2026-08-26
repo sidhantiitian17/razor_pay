@@ -7,6 +7,7 @@ import { RequestRunForm } from "@/components/eval/request-run-form";
 import { SeedDistribution } from "@/components/eval/seed-distribution";
 import { DataSurface, type SurfaceStatus } from "@/components/shell/data-surface";
 import { PageHeader, RevealItem, StagedReveal } from "@/components/shell/page-states";
+import { ProductShell } from "@/components/shell/product-shell";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import { useRunRequests } from "@/lib/use-run-requests";
 import { cn } from "@/lib/utils";
 import { useControlResults } from "@/lib/use-verify-inputs";
 
-export const Route = createFileRoute("/eval-lab")({
+export const Route = createFileRoute("/_authenticated/eval-lab")({
   head: () => ({
     meta: [
       { title: "Eval Lab — Settlement Reconciliation" },
@@ -44,8 +45,16 @@ export const Route = createFileRoute("/eval-lab")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: EvalLabPage,
+  component: EvalLabRoute,
 });
+
+function EvalLabRoute() {
+  return (
+    <ProductShell>
+      <EvalLabPage />
+    </ProductShell>
+  );
+}
 
 function runLabel(run: RunListRow): string {
   const seed = run.config ? `seed ${run.config.seed} (${run.config.seed_set})` : "seed unknown";
@@ -112,11 +121,11 @@ function EvalLabPage() {
 
       {rows.length > 0 ? (
         <RevealItem>
-          <section className="panel grid gap-3 p-4 sm:grid-cols-2">
-            <div className="grid gap-1.5">
+          <section className="panel grid min-w-0 gap-3 p-4 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-1.5">
               <span className="label-micro">Run A — baseline</span>
               <Select value={selectedA ?? ""} onValueChange={setRunIdA}>
-                <SelectTrigger>
+                <SelectTrigger className="min-w-0 [&>span]:truncate">
                   <SelectValue placeholder="select run" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,10 +137,10 @@ function EvalLabPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid gap-1.5">
+            <div className="grid min-w-0 gap-1.5">
               <span className="label-micro">Run B — candidate (drives every panel below)</span>
               <Select value={selectedB ?? ""} onValueChange={setRunIdB}>
-                <SelectTrigger>
+                <SelectTrigger className="min-w-0 [&>span]:truncate">
                   <SelectValue placeholder="select run" />
                 </SelectTrigger>
                 <SelectContent>

@@ -8,7 +8,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen w-full max-w-full overflow-x-clip bg-background">
       <SidebarNav />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-3 py-2 sm:h-14 sm:flex-nowrap sm:gap-4 sm:px-4 sm:py-0">
@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 p-5">{children}</main>
+        <main className="min-w-0 flex-1 p-4 sm:p-5">{children}</main>
       </div>
     </div>
   );

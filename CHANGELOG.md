@@ -2,6 +2,33 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [P15] — Landing Page, Real Auth + RLS, UI-Main Reconciliation — 2026-08-26
+
+### Added
+- Public marketing landing page at `/` — bento feature grid, GSAP + Lenis scroll parallax
+  (`src/components/landing/parallax.tsx`), screenshot-tour carousel of all 6 operator routes.
+- Real Supabase Auth: `src/routes/_authenticated/route.tsx` session gate, `src/hooks/use-auth.ts`,
+  `src/routes/auth.tsx` sign-in/sign-up. RLS is the actual boundary — 3 new migrations drop every
+  `anon` SELECT policy, add `public.user_roles` / `is_recon_operator()`, and gate every
+  reconciliation table read behind an authenticated operator/admin role.
+- `ui/tests_ui/auth-helpers.ts` + `global-setup.ts` — a real, authenticated Playwright fixture
+  (dedicated test-operator account, password-grant sign-in, shared `storageState`) closing the gap
+  left by the RLS lockdown, which had silently taken the whole suite from passing to 26/32 failing.
+
+### Changed
+- Operator routes moved under `src/routes/_authenticated/` (Runs, Dashboard, Exceptions, Agent
+  Trace, Eval Lab, Verify) — the plain sign-in-free versions no longer exist.
+- Primary brand accent retoned from teal to violet (6.83:1+ contrast), module/bento grid spans
+  fixed to avoid a dead-space layout bug, carousel screenshot legibility and captions improved.
+- `ui/tests_ui/shell.spec.ts`, `states.spec.ts`, `theme.spec.ts`, and the 4 REST-fetch specs
+  (`workqueue_count`, `no_fabrication`, `evidence`, `drilldown`) updated for the new route
+  structure and RLS-authenticated access. 31/32 Playwright specs now pass.
+
+### Known gap
+- `a11y.spec.ts` fails honestly on 2 real WCAG violations in the landing page (`aria-label` on a
+  roleless `div`, a non-keyboard-focusable scrollable region) — not hand-patched per the standing
+  no-hand-authored-UI-code rule; needs a Lovable-side fix pass.
+
 ## [P14-Followups] — Playwright Exit Gates, Supabase Writer & Nightly Eval — 2026-08-25
 
 ### Added

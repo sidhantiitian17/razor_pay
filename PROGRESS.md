@@ -3,10 +3,28 @@
 Repo: https://github.com/sidhantiitian17/razor_pay
 Lovable project id: 40d76d2d-38c3-4173-8e18-bcb4597dd784
 Lovable preview url: https://id-preview--40d76d2d-38c3-4173-8e18-bcb4597dd784.lovable.app
+Lovable live url: https://razorpay-settlement-sentinel.lovable.app
 Lovable editor url: https://lovable.dev/projects/40d76d2d-38c3-4173-8e18-bcb4597dd784
 Supabase project ref: dtgwbqcjblbcgclogvtv
 Holdout seed set in use: 101-120
 Holdout burns: none
+
+## [P15] Landing page, real auth + RLS, and UI-main reconciliation -- 2026-08-26
+Final Lovable-side round of this project's UI work reconciled into git from a fresh UI-main drop:
+marketing landing page at `/` (bento feature grid, GSAP/Lenis scroll parallax, screenshot-tour
+carousel of all 6 operator routes), real Supabase Auth (`/_authenticated` layout, RLS as the
+actual boundary -- anon has zero SELECT grant on any reconciliation table, `public.user_roles`
+gates access via `is_recon_operator()`), operator routes moved under `_authenticated/`
+(Runs/Dashboard/Exceptions/Agent Trace/Eval Lab/Verify), violet brand accent (6.83:1+ contrast),
+3 new Supabase migrations. 5 stale pre-restructure top-level route files (confirmed via Lovable's
+own `list_files` to not exist in the real project -- a local export/unzip artifact, not authored
+UI code) removed. Added a real authenticated Playwright fixture (`tests_ui/global-setup.ts` +
+`auth-helpers.ts`, dedicated test-operator account) since the whole existing tests_ui/ suite
+predated real auth and had gone from passing to entirely broken under the new RLS lockdown (26/32
+failing) -- now 31/32 passing; the one honest remaining failure is `a11y.spec.ts` catching 2 real
+WCAG violations in the landing page itself (`aria-label` on a roleless div, a non-keyboard-
+focusable scrollable region) -- not hand-patched, per the standing no-hand-authored-UI-code rule;
+needs a Lovable-side fix pass. tsc/eslint clean (0 errors).
 
 | Phase | Owner | Status | Checks | Branch | Commit | Tag | Date |
 |-------|-------|--------|--------|--------|--------|-----|------|

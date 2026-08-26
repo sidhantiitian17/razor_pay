@@ -330,6 +330,7 @@ export type Database = {
           created_at: string;
           error_message: string | null;
           id: number;
+          requested_by: string | null;
           result_run_id: string | null;
           status: string;
         };
@@ -340,6 +341,7 @@ export type Database = {
           created_at?: string;
           error_message?: string | null;
           id?: never;
+          requested_by?: string | null;
           result_run_id?: string | null;
           status?: string;
         };
@@ -350,6 +352,7 @@ export type Database = {
           created_at?: string;
           error_message?: string | null;
           id?: never;
+          requested_by?: string | null;
           result_run_id?: string | null;
           status?: string;
         };
@@ -572,15 +575,43 @@ export type Database = {
           },
         ];
       };
+      user_roles: {
+        Row: {
+          created_at: string;
+          id: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          role: Database["public"]["Enums"]["app_role"];
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          role?: Database["public"]["Enums"]["app_role"];
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"];
+          _user_id: string;
+        };
+        Returns: boolean;
+      };
+      is_recon_operator: { Args: never; Returns: boolean };
     };
     Enums: {
-      [_ in never]: never;
+      app_role: "admin" | "operator";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -701,6 +732,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "operator"],
+    },
   },
 } as const;

@@ -21,6 +21,33 @@ npm i
 npm run dev
 ```
 
+## Testing
+
+The Playwright suite (`tests_ui/`) exercises real, authenticated routes -- RLS is the actual
+security boundary (anon has no `SELECT` grant on any reconciliation table), so the suite needs a
+signed-in operator session, not just the anon key.
+
+Set these two env vars before running `bun run test` / `bun x playwright test`:
+
+```sh
+export TEST_OPERATOR_EMAIL="you@example.com"
+export TEST_OPERATOR_PASSWORD="..."
+```
+
+The account needs an `operator` (or `admin`) row in `public.user_roles` -- a fresh self-service
+sign-up alone is not enough, since only `service_role` can write that table. To provision one:
+
+1. Sign up normally via `/auth` (or the Supabase Auth REST `signup` endpoint) and confirm the
+   email.
+2. Have an existing admin (or run directly against the database, e.g. via the Supabase SQL editor)
+   grant the role:
+   ```sql
+   insert into public.user_roles (user_id, role) values ('<the new user's id>', 'operator');
+   ```
+
+`tests_ui/global-setup.ts` signs this account in once per run via the real password grant and
+seeds every test's browser storageState with the resulting session -- see `tests_ui/auth-helpers.ts`.
+
 ## Built with
 
 - TanStack Start

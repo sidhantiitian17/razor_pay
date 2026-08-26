@@ -10,6 +10,7 @@ export function RouteTransition({ children }: { children: ReactNode }) {
 
   return (
     <motion.div
+      className="min-w-0"
       key={pathname}
       initial={reduced ? false : { opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}

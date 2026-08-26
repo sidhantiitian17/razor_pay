@@ -39,7 +39,7 @@ export function AblationPanel({ ablation }: { ablation: Ablation }) {
   }));
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="panel p-4">
         <header className="mb-3">
           <h3 className="text-sm font-semibold text-foreground">Baselines — four ablation arms</h3>

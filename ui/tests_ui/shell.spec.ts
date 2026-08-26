@@ -1,16 +1,19 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("App Shell", () => {
-  test("renders all 5 routes", async ({ page }) => {
-    const routes = [
-      { path: "/", label: "Runs" },
-      { path: "/exceptions", label: "Exceptions" },
-      { path: "/agent-trace", label: "Agent Trace" },
-      { path: "/eval-lab", label: "Eval Lab" },
-      { path: "/verify", label: "Verify" },
-    ];
+// "/" is now the public marketing landing page (no sidebar); the operator
+// shell with its 6 routes lives behind real Supabase Auth under these paths.
+const ROUTES = [
+  { path: "/runs", label: "Runs" },
+  { path: "/dashboard", label: "Run Dashboard" },
+  { path: "/exceptions", label: "Exceptions" },
+  { path: "/agent-trace", label: "Agent Trace" },
+  { path: "/eval-lab", label: "Eval Lab" },
+  { path: "/verify", label: "Verify" },
+];
 
-    for (const { path, label } of routes) {
+test.describe("App Shell", () => {
+  test("renders all 6 authenticated routes", async ({ page }) => {
+    for (const { path, label } of ROUTES) {
       await page.goto(path);
       // Check that the route renders by verifying the sidebar link is active
       await expect(page.getByRole("link", { name: label, exact: true })).toBeVisible();
@@ -22,16 +25,8 @@ test.describe("App Shell", () => {
   });
 
   test("nav is keyboard reachable", async ({ page }) => {
-    await page.goto("/");
-    const links = page.getByRole("link");
-    // Check that the 5 route links are focusable
-    for (const { label } of [
-      { path: "/", label: "Runs" },
-      { path: "/exceptions", label: "Exceptions" },
-      { path: "/agent-trace", label: "Agent Trace" },
-      { path: "/eval-lab", label: "Eval Lab" },
-      { path: "/verify", label: "Verify" },
-    ]) {
+    await page.goto("/runs");
+    for (const { label } of ROUTES) {
       const link = page.getByRole("link", { name: label, exact: true });
       await link.focus();
       await expect(link).toBeFocused();

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shell/page-states";
+import { ProductShell } from "@/components/shell/product-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Sign in to record triage decisions on settlement exceptions. Reads stay available without a session.",
+          "Sign in to open the settlement reconciliation console. Every run, exception and verification surface requires an operator session.",
       },
       { property: "og:title", content: "Sign in — Settlement Reconciliation" },
       {
@@ -27,8 +28,16 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AuthPage,
+  component: AuthRoute,
 });
+
+function AuthRoute() {
+  return (
+    <ProductShell>
+      <AuthPage />
+    </ProductShell>
+  );
+}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -46,7 +55,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Signed in");
-        void navigate({ to: "/exceptions" });
+        void navigate({ to: "/runs" });
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -82,7 +91,7 @@ function AuthPage() {
       if (result.error) throw result.error;
       if (result.redirected) return;
       toast.success("Signed in with Google");
-      void navigate({ to: "/exceptions" });
+      void navigate({ to: "/runs" });
     } catch (error) {
       toast.error("Google sign-in failed", {
         description: error instanceof Error ? error.message : "Unknown error",
@@ -96,7 +105,7 @@ function AuthPage() {
     <div className="mx-auto w-full max-w-md">
       <PageHeader
         title="Operator sign-in"
-        description="Triage writes to exception status, assignee and resolution note require a session. Everything else is readable without one."
+        description="Every reconciliation surface is restricted to authenticated operators at the database level. Sign in to open runs, exceptions, traces, the eval lab and verification."
       />
 
       {session ? (
@@ -105,10 +114,10 @@ function AuthPage() {
           <div className="tnum text-sm text-foreground">{assigneeLabel}</div>
           <div className="flex gap-2">
             <Link
-              to="/exceptions"
+              to="/runs"
               className="inline-flex items-center rounded border border-border bg-surface px-3 py-1.5 text-sm text-foreground transition-colors hover:border-border-strong"
             >
-              Go to workqueue
+              Go to runs
             </Link>
             <Button size="sm" variant="ghost" onClick={signOut}>
               Sign out

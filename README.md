@@ -1,91 +1,158 @@
-# razor_pay — AI Finance Controller
+# Settlement Sentinel — AI Finance Controller
 
-An institutional 3-way settlement reconciliation engine (Bank Statement ↔ Gateway Payout ↔ General Ledger) with deterministic rule stacks, bounded LLM-agent matching, audit-grade state closures, and a real-time institutional web dashboard.
+An institutional 3-way settlement reconciliation engine (**Bank Statement ↔ Gateway Payout ↔ General Ledger**) with deterministic rule stacks, a bounded LLM agent for the residual, audit-grade reversible closures, and a real-time operator console — built so every number it shows is computed from fetched data, never invented.
 
-Money is strictly integer paise everywhere except the display layer. Every reported metric carries its explicit numerator, denominator, seed, and seed-set.
-
----
-
-## 1. Live Deployment & Project Links
-
-- **Lovable Web App (Preview):** https://id-preview--40d76d2d-38c3-4173-8e18-bcb4597dd784.lovable.app
-- **Lovable Project (Editor):** https://lovable.dev/projects/40d76d2d-38c3-4173-8e18-bcb4597dd784
-- **Supabase Backend Project:** `dtgwbqcjblbcgclogvtv` (`https://dtgwbqcjblbcgclogvtv.supabase.co`)
-- **Nightly Evaluation Workflow:** [`.github/workflows/eval.yml`](.github/workflows/eval.yml)
+Money is strictly integer paise everywhere except the display layer. Every reported metric carries its explicit numerator, denominator, seed, and seed-set — no bare percentages.
 
 ---
 
-## 2. Quickstart & Complete Verification (Under 10 Minutes)
+## 1. The problem
 
-### 2.1 Run Full Regression Net (P0 through P13)
-```bash
-bash scripts/checks/all.sh
+Every payment company runs the same reconciliation loop, usually by hand: three independent records of the same money — what the **bank** says arrived, what the **payment gateway** says it paid out, and what the **general ledger** says was booked — have to agree, row for row, before finance can close the books. When they don't agree, someone has to figure out *why*: a delayed settlement, a duplicate, a fee mismatch, a timing window, a genuinely lost transaction.
+
+Done manually, this is slow, error-prone, and gets worse as volume grows. Done with an LLM alone, it's fast but unauditable and prone to confidently inventing matches that aren't real. Settlement Sentinel is built to avoid both failure modes: **deterministic rules resolve the clean majority, a tightly bounded agent only touches the genuinely ambiguous residual, and everything either system produces is independently re-verifiable from the underlying rows.**
+
+## 2. How it solves it
+
+```
+ Bank statement          Gateway payout           General ledger
+      │                        │                        │
+      └────────────────────────┼────────────────────────┘
+                                ▼
+                 ┌───────────────────────────────┐
+                 │ 1. Candidate blocker            │  recall 1.0 over the
+                 │    (|C| < n²/4, never exhaustive)│  candidate space — nothing
+                 └───────────────┬───────────────┘  eligible is pruned early
+                                 ▼
+                 ┌───────────────────────────────┐
+                 │ 2. Deterministic rule stack     │  exact / fuzzy / pair
+                 │    (no LLM, ~74% match rate)    │  matching, zero cost
+                 └───────┬───────────────┬─────────┘
+                         │               │
+                  resolved matches   residual (unmatched)
+                         │               ▼
+                         │   ┌───────────────────────────┐
+                         │   │ 3. Bounded LLM agent        │  confidence ≥ 0.70,
+                         │   │    multi-turn, schema-locked│  ≥2-field corroboration,
+                         │   └───────────────┬─────────────┘  can never override a
+                         │                   ▼                 deterministic match
+                         │   ┌───────────────────────────┐
+                         │   │ 4. Deterministic guardrail  │  5-stage accept/reject,
+                         │   │    (rejects hallucinations) │  never trusts the LLM alone
+                         │   └─────┬───────────────┬───────┘
+                         │     accepted          rejected
+                         │         │                 ▼
+                         └─────────┤        ┌─────────────────┐
+                                   ▼         │ Exception queue  │  9 target buckets,
+                       ┌─────────────────┐   │ (evidence-first) │  reversible triage
+                       │ Idempotent close │   └─────────────────┘
+                       │ balanced journal │
+                       └────────┬────────┘
+                                ▼
+                  ┌─────────────────────────────┐
+                  │ Grader + Verify page          │  every check is *computed*
+                  │ (negative controls, falsifiers)│  live from fetched rows —
+                  └─────────────────────────────┘  a check that can't fail
+                                                     proves nothing, so each one
+                                                     ships with a poisoned-input
+                                                     test proving it can
 ```
 
-### 2.2 Generate Dataset & Execute Reconciliation
+**The core design decision:** the LLM agent is never trusted by default. It proposes; a separate, deterministic guardrail (confidence threshold, multi-field corroboration, anti-hallucination ID checks, bounded delta tolerance, and "can never override a rule-based match") decides. Anything the guardrail rejects becomes an evidence-first exception for a human operator — never a silent write. Every closure records a before/after snapshot so it can be exactly reversed. And the product refuses to claim confidence it hasn't earned: the **Eval Lab** measures match rate against 20 *holdout* seeds the system has never tuned against, and the **Verify** page recomputes every anti-slop check live from the database rather than rendering a canned "passed" badge — each check ships with a poisoned-fixture test proving it can genuinely fail, not just genuinely pass.
+
+Full write-up, principles, and the 12-table schema: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+## 3. What's in the console
+
+The operator console (`ui/`) is a TanStack Start + Supabase app, gated behind real Supabase Auth (row-level security is the actual boundary — an anonymous visitor has no SELECT grant on any reconciliation table, not just a hidden UI).
+
+| Route | What it shows |
+|---|---|
+| **Runs** | Every reconciliation run, match rate and unresolved count side by side, newest first. |
+| **Run Dashboard** | Headline KPIs with numerator/denominator, dual confusion matrices, 4-arm ablation panel, resolved-tag vocabularies kept separate from unresolved buckets. |
+| **Exceptions** | 9-bucket virtualized triage queue — each row shows its source diff and audit evidence string, closures are reversible. |
+| **Agent Trace** | Every LLM call in order: input, tool use, guardrail verdict — nothing the agent decided is a black box. |
+| **Eval Lab** | Dev/holdout/regression seed sweeps kept apart; the reported gate value is the *worst* holdout seed, never the best demo seed. |
+| **Verify** | Anti-slop checks, negative controls and falsifiers, computed live and printing the evidence behind each verdict. |
+
+Live: **https://razorpay-settlement-sentinel.lovable.app**
+
+## 4. Setup
+
+Two independent halves — the reconciliation engine (Python) and the operator console (TypeScript). You don't need both to explore either one: the engine runs fully offline against a local SQLite file, and the console can point at the shared Supabase project below.
+
+### 4.1 Prerequisites
+- Python ≥ 3.11 (repo pins 3.13) with [`uv`](https://docs.astral.sh/uv/)
+- Node ≥ 20 with [`bun`](https://bun.sh)
+- A Supabase project (only needed if you want the console reading live data — use the shared dev project's public anon key, or your own)
+
+### 4.2 Engine — generate a dataset and run reconciliation
 ```bash
-# Generate synthetic 3-way reconciliation dataset
+git clone https://github.com/sidhantiitian17/razor_pay.git
+cd razor_pay
+uv sync --all-extras
+
+# synthetic 3-way dataset (bank / payout / ledger)
 uv run python -m engine.cli generate --n 100 --seed 42 --out data
 
-# Run reconciliation pipeline and publish to SQLite/Supabase database
-uv run python -m engine.cli run --mode rules_agent --seeds 42 --n 100 --report-out reports/run_42.json --publish
+# run the pipeline (rules + bounded agent) and publish the report
+uv run python -m engine.cli run --mode rules_agent --seeds 42 --n 100 \
+  --report-out reports/run_42.json --publish
 ```
 
-### 2.3 Evaluate Across Holdout Seed Set (Seeds 101–120)
+### 4.3 Evaluate against holdout seeds
 ```bash
-# Multi-seed sweep across 20 unseen holdout seeds
+# 20 seeds the system was never tuned against
 uv run python -m engine.eval.sweep --seeds 101-120
 
-# 4-arm ablation evaluation (rules_only, agent_only, rules_agent, random)
+# 4-arm ablation: rules_only / agent_only / rules_agent / random
 uv run python -m engine.eval.ablation --seeds 101-120
 ```
 
-### 2.4 Verify Database & Falsification Controls
+### 4.4 Verify the published data (anti-slop check)
 ```bash
-# Crosscheck published database tables against report.json
+# diffs the published DB rows against report.json — zero UI fabrication allowed
 uv run python -m engine.tools.crosscheck --run <run_id>
-
-# Verify all 6 negative controls in the persistence store
-uv run python -m engine.tools.crosscheck --controls
+uv run python -m engine.tools.crosscheck --controls   # all 6 negative controls
 ```
 
----
-
-## 3. Key Headline Numbers (Holdout Seeds 101–120)
-
-- **Candidate Blocker Recall:** 1.0000 (100% recall across candidate space $|C| < n^2/4$).
-- **Rules-Only Baseline Match Rate:** ~74.2% (zero LLM cost).
-- **Rules+Agent Hybrid Match Rate:** ~84.6% (positive `agent_lift > 0`).
-- **Precision (Bank-Payout Links):** > 98.5%.
-- **Negative Controls:** 6/6 verified falsifiable in CI.
-- **Worst-Case Holdout Minimum:** 71.00% (seed 101, gate value).
-
----
-
-## 4. Architecture & Documentation
-
-- [`ARCHITECTURE.md`](ARCHITECTURE.md) — Topology, pure core boundaries, safety guardrails, and scalability roadmap.
-- [`VERIFICATION.md`](VERIFICATION.md) — Step-by-step reproduction guide for human reviewers and CI.
-- [`ANTI_SLOP.md`](ANTI_SLOP.md) — 10-minute reviewer's guide proving falsifiability and zero truth leak.
-- [`docs/EVALUATION.md`](docs/EVALUATION.md) — Evaluation methodology, link-level formulations, and ablation arms.
-- [`docs/FALSIFICATION.md`](docs/FALSIFICATION.md) — Six refutation conditions stated in advance.
-- [`PROGRESS.md`](PROGRESS.md) — Master ledger of completed phases (P0–P13) and git tags.
-- [`CHANGELOG.md`](CHANGELOG.md) — Dated changelog of merged phases.
-- [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) — Master design specifications and requirement atoms (R1–R10).
-
----
-
-## 5. Web Dashboard
-
+### 4.5 Operator console
 ```bash
 cd ui
+cp .env.example .env   # fill in your Supabase project URL + anon key
 bun install
 bun run dev
 ```
+Sign up on `/auth` (Supabase email/password) — new accounts need an operator role granted before the reconciliation tables become readable (RLS-enforced, not a UI gate); ask an existing admin or grant it directly against `public.user_roles`.
 
-Dashboard features:
-- **Run Dashboard:** KPI cards with denominators, dual 2x2 confusion matrices, ablation panel, and separated vocabulary bars.
-- **Exception Workqueue:** 9-bucket virtualized triage queue with side-by-side source diffs and audit evidence strings.
-- **Agent Trace:** Full LLM call timeline, prompt/response viewer, and guardrail telemetry.
-- **Verify Page:** Real-time computation of 8 anti-slop checks and 6 negative controls.
-- **Eval Lab:** Box plots across 20 holdout seeds, 4-arm ablation charts, run comparison deltas, and live run requests.
+### 4.6 Full regression net
+```bash
+bash scripts/checks/all.sh   # every phase's check script, P0 through P13
+```
+
+## 5. Results (holdout seeds 101–120)
+
+| Metric | Value |
+|---|---|
+| Candidate blocker recall | 1.0000 (100%, over a candidate space $\lvert C\rvert < n^2/4$) |
+| Rules-only match rate | ~74.2% (zero LLM cost) |
+| Rules + bounded agent match rate | ~84.6% (positive `agent_lift`) |
+| Bank–payout link precision | > 98.5% |
+| Negative controls verified falsifiable | 6 / 6 |
+| Worst-case holdout minimum (gate value) | 71.00% (seed 101) |
+
+## 6. Documentation
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — topology, pure-core isolation, guardrail design, 12-table schema, scalability roadmap.
+- [`VERIFICATION.md`](VERIFICATION.md) — step-by-step reproduction guide for reviewers and CI.
+- [`ANTI_SLOP.md`](ANTI_SLOP.md) — 10-minute reviewer's guide to falsifiability and zero truth-leak.
+- [`docs/EVALUATION.md`](docs/EVALUATION.md) — evaluation methodology and the 4-arm ablation design.
+- [`docs/FALSIFICATION.md`](docs/FALSIFICATION.md) — six refutation conditions, stated in advance.
+- [`PROGRESS.md`](PROGRESS.md) · [`CHANGELOG.md`](CHANGELOG.md) — phase ledger and dated changelog.
+- [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) — master design spec and requirement atoms (R1–R10).
+
+## 7. Tech stack
+
+**Engine:** Python 3.13, Pydantic v2, pure-core matching (zero I/O, enforced by `import-linter`), SQLite / Supabase Postgres storage adapters, `uv` for dependency management.
+**Console:** TanStack Start + React 19, Tailwind v4 + shadcn/ui, Supabase Auth + Postgres (RLS as the real security boundary), GSAP/Lenis for scroll interaction, Framer Motion for reduced-motion-aware transitions, Recharts, Playwright for UI verification.
+**CI:** ruff, mypy --strict, import-linter, pytest with coverage, pip-audit, gitleaks, and a frozen-schema diff gate that fails the build if `report.d.ts` drifts from `contracts/report.schema.json`.

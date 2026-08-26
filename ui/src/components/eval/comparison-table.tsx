@@ -92,22 +92,24 @@ export function ComparisonTable({
         </p>
       ) : null}
 
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-border">
-            <th className="label-micro px-3 py-2 text-left">Metric</th>
-            <th className="label-micro px-3 py-2 text-right">A — {labelA}</th>
-            <th className="label-micro px-3 py-2 text-right">B — {labelB}</th>
-            <th className="label-micro px-3 py-2 text-right">Δ (B − A)</th>
-            <th className="label-micro px-3 py-2 text-left">Direction</th>
-          </tr>
-        </thead>
-        <tbody>
-          {result.rows.map((row) => (
-            <Row key={row.id} row={row} />
-          ))}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[58rem]">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="label-micro px-3 py-2 text-left">Metric</th>
+              <th className="label-micro px-3 py-2 text-right">A — {labelA}</th>
+              <th className="label-micro px-3 py-2 text-right">B — {labelB}</th>
+              <th className="label-micro px-3 py-2 text-right">Δ (B − A)</th>
+              <th className="label-micro px-3 py-2 text-left">Direction</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.rows.map((row) => (
+              <Row key={row.id} row={row} />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

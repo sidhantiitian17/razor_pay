@@ -98,9 +98,9 @@ async function fetchRunRequests(ids: readonly number[]): Promise<RunRequestRow[]
 }
 
 /**
- * This session's own run requests. `run_requests` is readable by every
- * authenticated user, so the panel is scoped client-side to the ids this
- * session inserted rather than showing everyone's queue.
+ * This session's own run requests. The database restricts `run_requests` reads
+ * to the operator account that created them (admins can see all), and this
+ * panel narrows further to the ids this session inserted.
  */
 export function useRunRequests(enabled: boolean) {
   const queryClient = useQueryClient();

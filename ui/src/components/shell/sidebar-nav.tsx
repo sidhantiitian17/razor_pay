@@ -10,7 +10,7 @@ type NavRoute = {
 };
 
 const ROUTES: NavRoute[] = [
-  { to: "/", label: "Runs", icon: ListTree, exact: true },
+  { to: "/runs", label: "Runs", icon: ListTree, exact: true },
   { to: "/dashboard", label: "Run Dashboard", icon: Gauge, exact: false },
 
   { to: "/exceptions", label: "Exceptions", icon: TriangleAlert, exact: false },

@@ -1,17 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-// Matches ui/.env -- publishable/anon key, read-only under RLS, same
-// credential the deployed UI itself uses. (Playwright does not load .env by
-// default, so this must not depend on process.env being populated.)
-const SUPABASE_URL = "https://dtgwbqcjblbcgclogvtv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_LXQj3IBK6t9AZgn6TQJOmQ_eNqEvfat";
+import { operatorRestGet, signInTestOperator } from "./auth-helpers";
 
+// RLS now requires a signed-in operator (anon has no SELECT grant) -- see
+// auth-helpers.ts. Token cached per test file, not per call.
+let cachedToken: string | undefined;
 async function restGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-  });
-  if (!res.ok) throw new Error(`Supabase REST fetch failed: ${res.status} ${await res.text()}`);
-  return res.json() as Promise<T>;
+  cachedToken ??= (await signInTestOperator()).access_token;
+  return operatorRestGet<T>(path, cachedToken);
 }
 
 function unresolvedTotal(unresolved: Record<string, number>): number {
