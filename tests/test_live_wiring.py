@@ -49,15 +49,72 @@ def test_crosscheck_tool_run() -> None:
     store = SQLiteStorageAdapter()
     dataset = generate_dataset(n=60, seed=42)
     generator = ReportGenerator()
-    report = generator.generate_report(dataset=dataset, mode="rules_only", seed=42)
+    report = generator.generate_report(dataset=dataset, mode="rules_agent", seed=42)
 
     publisher = ReportPublisher(store=store)
-    publisher.publish(dataset=dataset, report=report)
+    publisher.publish(
+        dataset=dataset,
+        report=report,
+        match_groups=generator.last_match_groups,
+        link_decisions=generator.last_link_decisions,
+        agent_calls=generator.last_agent_calls,
+        closures=generator.last_closures,
+    )
 
     run_id = str(report["run_id"])
     res = crosscheck_run(run_id=run_id, store=store)
     assert res["status"] == "PASS"
     assert res["diff_count"] == 0
+
+
+def test_crosscheck_fails_on_underpersisted_agent_calls() -> None:
+    """Check 12.2: crosscheck_run raises AssertionError if agent_calls are under-persisted."""
+    import pytest
+
+    store = SQLiteStorageAdapter()
+    dataset = generate_dataset(n=60, seed=42)
+    generator = ReportGenerator()
+    report = generator.generate_report(dataset=dataset, mode="rules_agent", seed=42)
+
+    publisher = ReportPublisher(store=store)
+    # Deliberately under-persist agent_calls (publish empty list while report claims >0)
+    publisher.publish(
+        dataset=dataset,
+        report=report,
+        match_groups=generator.last_match_groups,
+        link_decisions=generator.last_link_decisions,
+        agent_calls=[],
+        closures=generator.last_closures,
+    )
+
+    run_id = str(report["run_id"])
+    with pytest.raises(AssertionError, match="Agent calls mismatch"):
+        crosscheck_run(run_id=run_id, store=store)
+
+
+def test_crosscheck_fails_on_underpersisted_closures() -> None:
+    """Check 12.2: crosscheck_run raises AssertionError if closures are under-persisted."""
+    import pytest
+
+    store = SQLiteStorageAdapter()
+    dataset = generate_dataset(n=60, seed=42)
+    generator = ReportGenerator()
+    report = generator.generate_report(dataset=dataset, mode="rules_only", seed=42)
+
+    publisher = ReportPublisher(store=store)
+    # Deliberately omit closures from publish
+    publisher.publish(
+        dataset=dataset,
+        report=report,
+        match_groups=generator.last_match_groups,
+        link_decisions=generator.last_link_decisions,
+        agent_calls=generator.last_agent_calls,
+        closures=[],
+    )
+
+    run_id = str(report["run_id"])
+    with pytest.raises(AssertionError, match="Closures mismatch"):
+        crosscheck_run(run_id=run_id, store=store)
 
 
 def test_triage_mutation_isolation() -> None:
