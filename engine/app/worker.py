@@ -69,7 +69,14 @@ class ReconciliationWorker:
                 seed_set=seed_set,  # type: ignore[arg-type]
             )
 
-            self.publisher.publish(dataset=dataset, report=report)
+            self.publisher.publish(
+                dataset=dataset,
+                report=report,
+                match_groups=self.generator.last_match_groups,
+                link_decisions=self.generator.last_link_decisions,
+                agent_calls=self.generator.last_agent_calls,
+                closures=self.generator.last_closures,
+            )
             run_id = str(report["run_id"])
 
             self.store.update_run_request(

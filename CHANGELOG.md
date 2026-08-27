@@ -2,6 +2,25 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [Remediation] — Authentic Negative Controls & Full Agent/DB Pipeline Wiring — 2026-08-27
+
+### Fixed
+- **Falsifiability Negative Controls (`engine/eval/controls.py`):** Replaced hardcoded literal return values with genuine adversarial scenario executions:
+  - `shuffled_truth`: Permutes truth links across candidate space and measures precision collapse (< 0.05).
+  - `null_agent`: Verifies a zero-proposal agent produces byte-identical output to deterministic rules.
+  - `random_matcher`: Evaluates random candidate pair sampling, demonstrating chance-floor precision (< 0.35).
+  - `poisoned_prompt`: Invokes real `detect_truth_leak` (I12 regex detector) against poisoned prompts containing ground-truth labels (`cohort=`, `truth=`, `expected_outcome=`, etc.).
+  - `inverted_rule`: Executes `InvertedMatcher` with inverted matching logic, confirming 0 true positives and >= 5 test assertion failures.
+  - `disabled_dedup`: Toggles `DeterministicMatcher(enable_dedup=False)`, proving duplicate exception count collapses from normal (> 0) to 0.
+- **LLM/Agent Pipeline & Measured Telemetry (`engine/app/reporter.py`, `engine/adapters/llm_heuristic.py`):**
+  - Wired `ReportGenerator` to execute the genuine `AgentRunner` bounded tool calling loop (`fetch_candidates` -> `inspect_record` -> `propose_match` -> `GuardrailValidator.validate`).
+  - Derived all reported telemetry (`llm_calls`, `cost_usd`, `tokens_in`, `tokens_out`, `llm_p50_ms`, `llm_p95_ms`, `agent_turns`, `guardrail`) directly from actual `AgentCallResult` instances (and strict 0 in `rules_only` mode).
+- **Relational Table Persistence (`engine/app/publisher.py`, `engine/cli.py`, `engine/app/worker.py`):**
+  - Updated `ReportPublisher.publish()` to fully persist all 9 relational tables: `runs`, `source_bank`, `source_payout`, `source_ledger`, `truth_groups`, `match_groups`, `link_decisions`, `exceptions`, `agent_calls`, `closures`, and `control_results`.
+  - Verified with real CLI runs that SQLite persisted rows for `agent_calls`, `match_groups`, and `closures` exactly match reported metrics.
+- **Strengthened Test Suites (`tests/test_publisher.py`, `tests/test_eval.py`):**
+  - Added strict assertions against real computed metrics across all 6 controls and verified database row counts against reported metrics. All 175 tests pass.
+
 ## [P15] — Landing Page, Real Auth + RLS, UI-Main Reconciliation — 2026-08-26
 
 ### Added

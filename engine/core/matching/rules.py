@@ -46,9 +46,11 @@ class DeterministicMatcher:
         self,
         drift_tolerance_paise: int = 50,
         skew_tolerance_days: int = 2,
+        enable_dedup: bool = True,
     ) -> None:
         self.drift_tolerance_paise = drift_tolerance_paise
         self.skew_tolerance_days = skew_tolerance_days
+        self.enable_dedup = enable_dedup
 
     def match(
         self,
@@ -92,7 +94,7 @@ class DeterministicMatcher:
             p_list = payouts_by_utr[utr]
 
             # Duplicate Payouts on same UTR
-            if len(p_list) > 1 and len(b_list) == 1:
+            if self.enable_dedup and len(p_list) > 1 and len(b_list) == 1:
                 bank = b_list[0]
                 row_ids = [bank.bank_id] + [p.payout_id for p in p_list]
                 for p in p_list:
@@ -395,4 +397,48 @@ class DeterministicMatcher:
                 )
             )
 
+        return result
+
+
+class InvertedMatcher:
+    """Adversarial matcher with inverted amount/UTR matching logic (§4.6, check 5.14)."""
+
+    def __init__(
+        self,
+        drift_tolerance_paise: int = 50,
+        skew_tolerance_days: int = 2,
+    ) -> None:
+        self.drift_tolerance_paise = drift_tolerance_paise
+        self.skew_tolerance_days = skew_tolerance_days
+
+    def match(
+        self,
+        bank_txns: list[BankTxn],
+        gateway_payouts: list[GatewayPayout],
+        ledger_entries: list[LedgerEntry],
+    ) -> MatchResult:
+        """Pair transactions where amounts and UTRs are completely mismatched."""
+        result = MatchResult()
+        payouts_reversed = list(reversed(gateway_payouts))
+
+        for idx, bank in enumerate(bank_txns):
+            if idx < len(payouts_reversed):
+                payout = payouts_reversed[idx]
+                if bank.utr != payout.utr and abs(bank.amount_paise - payout.net_paise) > 100:
+                    result.matched_groups.append(
+                        MatchGroup(
+                            group_id=f"MG-INV-{idx:04d}",
+                            kind=GroupKind.SIMPLE,
+                            bank_ids=[bank.bank_id],
+                            payout_ids=[payout.payout_id],
+                            ledger_ids=[],
+                            confidence=0.10,
+                            source="deterministic",
+                            fields_matched=[],
+                            tolerances_used=[],
+                            tag=ResolvedTag.CLEAN,
+                            reason="Inverted adversarial pairing",
+                            agent_turns=0,
+                        )
+                    )
         return result

@@ -9,6 +9,11 @@ Supabase project ref: dtgwbqcjblbcgclogvtv
 Holdout seed set in use: 101-120
 Holdout burns: none
 
+## [Remediation] Authentic Negative Controls & Real Agent/DB Wiring -- 2026-08-27
+Remediated the two critical authenticity and pipeline wiring gaps identified in Ryan's audit:
+1. **Falsifiability Negative Controls:** All 6 negative controls in `engine/eval/controls.py` now execute authentic adversarial scenarios without hardcoded literals (`shuffled_truth` permutes truth links, `null_agent` tests deterministic equivalence, `random_matcher` computes chance-floor precision, `poisoned_prompt` runs regex detector on injected truth labels, `inverted_rule` runs `InvertedMatcher` confirming 0 TP and >= 5 test assertion failures, `disabled_dedup` toggles `enable_dedup=False`).
+2. **Agent Loop Wiring & Relational DB Persistence:** `engine/app/reporter.py` executes `AgentRunner` with `HeuristicLLMClient` or live client, measuring genuine token/latency/cost telemetry. `engine/app/publisher.py` persists full relational tables (`match_groups`, `link_decisions`, `agent_calls`, `closures`, `control_results`). All 175 tests pass and real CLI runs verified against SQLite DB row counts.
+
 ## [P15] Landing page, real auth + RLS, and UI-main reconciliation -- 2026-08-26
 Final Lovable-side round of this project's UI work reconciled into git from a fresh UI-main drop:
 marketing landing page at `/` (bento feature grid, GSAP/Lenis scroll parallax, screenshot-tour

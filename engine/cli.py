@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import click
 
-from engine.app.reporter import generate_reconciliation_report, write_baseline_report
+from engine.app.reporter import write_baseline_report
 from engine.core.generator.build import generate_dataset
 
 if TYPE_CHECKING:
@@ -122,7 +122,10 @@ def run(
     dataset = generate_dataset(n=n, seed=first_seed)
     typed_mode = cast("Literal['rules_only', 'agent_only', 'rules_agent', 'random']", mode)
     typed_seed_set = cast("Literal['dev', 'holdout', 'regression']", seed_set)
-    report = generate_reconciliation_report(
+    from engine.app.reporter import ReportGenerator
+
+    generator = ReportGenerator()
+    report = generator.generate_report(
         dataset=dataset,
         mode=typed_mode,
         seed=first_seed,
@@ -135,7 +138,14 @@ def run(
     if publish:
         store = _resolve_storage_adapter(db=db)
         publisher = ReportPublisher(store=store)
-        publisher.publish(dataset=dataset, report=report)
+        publisher.publish(
+            dataset=dataset,
+            report=report,
+            match_groups=generator.last_match_groups,
+            link_decisions=generator.last_link_decisions,
+            agent_calls=generator.last_agent_calls,
+            closures=generator.last_closures,
+        )
         click.echo(f"Published reconciliation dataset and report to database ({db}).")
 
 

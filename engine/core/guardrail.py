@@ -6,11 +6,29 @@ amount drift, and timing skew thresholds.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from engine.core.models import BankTxn, GatewayPayout, LedgerEntry
+
+FORBIDDEN_TRUTH_PATTERNS = [
+    re.compile(r"\bcohort\s*=", re.IGNORECASE),
+    re.compile(r"\btruth\s*=", re.IGNORECASE),
+    re.compile(r"\bground_truth\b", re.IGNORECASE),
+    re.compile(r"\bexpected_outcome\s*=", re.IGNORECASE),
+    re.compile(r"\bexpected_tag\s*=", re.IGNORECASE),
+    re.compile(r"\bexpected_bucket\s*=", re.IGNORECASE),
+]
+
+
+def detect_truth_leak(messages: list[dict[str, object]] | str) -> bool:
+    """Detect whether prompt or message payload leaks forbidden ground-truth labels (I12)."""
+    import json
+
+    text = json.dumps(messages) if not isinstance(messages, str) else messages
+    return any(pat.search(text) for pat in FORBIDDEN_TRUTH_PATTERNS)
 
 
 @dataclass(frozen=True)
