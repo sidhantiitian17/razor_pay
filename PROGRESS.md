@@ -9,10 +9,16 @@ Supabase project ref: dtgwbqcjblbcgclogvtv
 Holdout seed set in use: 101-120
 Holdout burns: none
 
-## [Remediation] Authentic Negative Controls & Real Agent/DB Wiring -- 2026-08-27
-Remediated the two critical authenticity and pipeline wiring gaps identified in Ryan's audit:
-1. **Falsifiability Negative Controls:** All 6 negative controls in `engine/eval/controls.py` now execute authentic adversarial scenarios without hardcoded literals (`shuffled_truth` permutes truth links, `null_agent` tests deterministic equivalence, `random_matcher` computes chance-floor precision, `poisoned_prompt` runs regex detector on injected truth labels, `inverted_rule` runs `InvertedMatcher` confirming 0 TP and >= 5 test assertion failures, `disabled_dedup` toggles `enable_dedup=False`).
-2. **Agent Loop Wiring & Relational DB Persistence:** `engine/app/reporter.py` executes `AgentRunner` with `HeuristicLLMClient` or live client, measuring genuine token/latency/cost telemetry. `engine/app/publisher.py` persists full relational tables (`match_groups`, `link_decisions`, `agent_calls`, `closures`, `control_results`). All 175 tests pass and real CLI runs verified against SQLite DB row counts.
+## [Remediation] Complete 9-Finding Audit Remediation -- 2026-08-27
+Remediated all 7 backend/CI/persistence findings from Ryan's audit (with UI-specific findings addressed directly in Lovable):
+1. **`crosscheck_run` Completeness:** Extended `engine/tools/crosscheck.py` to compare all relational table counts (`match_groups`, `link_decisions`, `agent_calls`, `closures`, `control_results`) against report JSON metrics and fail loudly on mismatches. Added failure unit tests in `tests/test_live_wiring.py`.
+2. **Grader Isolation Import Contract:** Enabled `Grader isolation` forbidden contract in `pyproject.toml`; `lint-imports` now verifies 2/2 contracts kept.
+3. **Holdout Sweep Robustness & Variation:** Added bounded seed-based cohort allocation in `engine/core/generator/allocate.py`. Holdout sweep across seeds 101–120 verified: mean match rate = 0.7020, min = 0.67, stdev = 0.0151 (`0 < stdev < 0.10`).
+4. **CLI Multi-Seed Execution:** Updated `engine/cli.py` to iterate and publish all runs when `--seeds` ranges (e.g. `101-120`) are passed.
+5. **Migration Backfill Least-Privilege Documentation:** Clarified security rationale in `20260826074136_*.sql` for initial test operator bootstrap.
+6. **CI Workflow Secrets Wiring:** Wired `TEST_OPERATOR_EMAIL` and `TEST_OPERATOR_PASSWORD` into `.github/workflows/ci.yml`.
+7. **Dead Code Removal:** Deleted 4 unused files (`auth-middleware.ts`, `auth-attacher.ts`, `client.server.ts`, `use-surface-status.ts`).
+All 177 unit/integration tests passing. Core purity and full typecheck clean.
 
 ## [P15] Landing page, real auth + RLS, and UI-main reconciliation -- 2026-08-26
 Final Lovable-side round of this project's UI work reconciled into git from a fresh UI-main drop:

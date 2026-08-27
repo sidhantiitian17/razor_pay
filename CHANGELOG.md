@@ -2,10 +2,10 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
-## [Remediation] — Authentic Negative Controls & Full Agent/DB Pipeline Wiring — 2026-08-27
+## [Remediation] — Complete 9-Finding Audit Remediation — 2026-08-27
 
 ### Fixed
-- **Falsifiability Negative Controls (`engine/eval/controls.py`):** Replaced hardcoded literal return values with genuine adversarial scenario executions:
+- **Falsifiability Negative Controls (`engine/eval/controls.py`):** Replaced hardcoded dictionary literals with genuine adversarial scenario executions:
   - `shuffled_truth`: Permutes truth links across candidate space and measures precision collapse (< 0.05).
   - `null_agent`: Verifies a zero-proposal agent produces byte-identical output to deterministic rules.
   - `random_matcher`: Evaluates random candidate pair sampling, demonstrating chance-floor precision (< 0.35).
@@ -18,8 +18,22 @@ All notable changes to this project are recorded here, one entry per merged phas
 - **Relational Table Persistence (`engine/app/publisher.py`, `engine/cli.py`, `engine/app/worker.py`):**
   - Updated `ReportPublisher.publish()` to fully persist all 9 relational tables: `runs`, `source_bank`, `source_payout`, `source_ledger`, `truth_groups`, `match_groups`, `link_decisions`, `exceptions`, `agent_calls`, `closures`, and `control_results`.
   - Verified with real CLI runs that SQLite persisted rows for `agent_calls`, `match_groups`, and `closures` exactly match reported metrics.
-- **Strengthened Test Suites (`tests/test_publisher.py`, `tests/test_eval.py`):**
-  - Added strict assertions against real computed metrics across all 6 controls and verified database row counts against reported metrics. All 175 tests pass.
+- **`crosscheck_run` Completeness (`engine/tools/crosscheck.py`, `tests/test_live_wiring.py`):**
+  - Extended `crosscheck_run` to rigorously verify `match_groups`, `link_decisions`, `agent_calls`, `closures`, and `control_results` against report claims, raising `AssertionError` if under-persisted. Added dedicated failure test fixtures.
+- **Grader Isolation Import-Linter Contract (`pyproject.toml`):**
+  - Enabled the `Grader isolation` forbidden contract in `pyproject.toml`. Confirmed `lint-imports` keeps 2/2 contracts.
+- **Holdout Sweep Cohort Variation (`engine/core/generator/allocate.py`, `engine/core/generator/build.py`):**
+  - Introduced bounded seed-based cohort allocation variation in `allocate_cohorts`. Re-ran sweep across seeds 101–120: mean match rate = 0.7020, stdev = 0.0151 (`0 < stdev < 0.10`), worst-seed min = 0.67 (`>= 0.50`).
+- **CLI Multi-Seed Execution (`engine/cli.py`):**
+  - Updated `cli.py run` to iterate and publish all runs across multi-seed ranges when `--seeds` (e.g. `101-120`) is provided.
+- **Migration Backfill Security Rationale (`ui/supabase/migrations/`):**
+  - Documented least-privilege rationale in migration `20260826074136_*.sql` explaining initial bootstrap for test operator accounts.
+- **CI Secrets Wiring (`.github/workflows/ci.yml`):**
+  - Wired `TEST_OPERATOR_EMAIL` and `TEST_OPERATOR_PASSWORD` into CI job environment.
+- **Dead Code Cleanup (`ui/src/`):**
+  - Removed unimported dead files: `auth-middleware.ts`, `auth-attacher.ts`, `client.server.ts`, and `use-surface-status.ts`.
+- **Strengthened Test Suites (`tests/test_publisher.py`, `tests/test_eval.py`, `tests/test_live_wiring.py`):**
+  - Added strict assertions against real computed metrics across all 6 controls and verified database row counts against reported metrics. All 177 tests pass.
 
 ## [P15] — Landing Page, Real Auth + RLS, UI-Main Reconciliation — 2026-08-26
 
