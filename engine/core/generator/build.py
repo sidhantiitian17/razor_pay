@@ -189,7 +189,7 @@ def generate_dataset(n: int, seed: int) -> GeneratedDataset:
     """
     rng = random.Random(seed)
     counters = IdCounters()
-    allocations = allocate_cohorts(n)
+    allocations = allocate_cohorts(n, seed=seed)
 
     injections: list[InjectedCohort] = []
     case_idx = 0

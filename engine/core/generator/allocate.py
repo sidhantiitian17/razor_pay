@@ -7,6 +7,7 @@ without rounding errors or dropped remainder items.
 from __future__ import annotations
 
 import math
+import random
 
 from engine.core.models import CohortName
 
@@ -27,11 +28,12 @@ COHORT_PERCENTAGES: dict[CohortName, int] = {
 }
 
 
-def allocate_cohorts(n: int) -> dict[CohortName, int]:
+def allocate_cohorts(n: int, seed: int | None = None) -> dict[CohortName, int]:
     """Allocate `n` cases across all 13 cohorts using the largest-remainder method.
 
     Args:
         n: Total number of records to generate (must be >= 50).
+        seed: Optional seed providing bounded per-seed cohort variation (§3.5, §4.9).
 
     Returns:
         Mapping from CohortName to exact count, where sum(counts.values()) == n.
@@ -42,10 +44,21 @@ def allocate_cohorts(n: int) -> dict[CohortName, int]:
     if n < 50:
         raise ValueError(f"n must be >= 50 (got {n})")
 
+    if seed is None:
+        pcts: dict[CohortName, float] = {c: float(p) for c, p in COHORT_PERCENTAGES.items()}
+    else:
+        rng = random.Random(seed)
+        raw_weights: dict[CohortName, float] = {}
+        for c, base_pct in COHORT_PERCENTAGES.items():
+            delta = rng.uniform(-1.5, 1.5)
+            raw_weights[c] = max(1.0, float(base_pct) + delta)
+        total_w = sum(raw_weights.values())
+        pcts = {c: (w / total_w) * 100.0 for c, w in raw_weights.items()}
+
     exact_quotas: list[tuple[CohortName, float, int, float]] = []
     total_integer = 0
 
-    for cohort, pct in COHORT_PERCENTAGES.items():
+    for cohort, pct in pcts.items():
         exact = n * (pct / 100.0)
         integer_part = math.floor(exact)
         remainder = exact - integer_part
