@@ -249,3 +249,22 @@ def test_crosscheck_tool_controls() -> None:
     res = crosscheck_controls(store=store)
     assert res["status"] == "PASS"
     assert res["controls_verified"] == 6
+
+
+def test_multi_seed_report_config_seed_integrity() -> None:
+    """Verify that every report in a multi-seed batch contains its exact seed in config.seed."""
+    generator = ReportGenerator()
+    seed_list = [101, 102, 103]
+
+    for s in seed_list:
+        dataset = generate_dataset(n=50, seed=s)
+        report = generator.generate_report(
+            dataset=dataset,
+            mode="rules_only",
+            seed=s,
+            seed_set="holdout",
+            seeds=seed_list,
+        )
+        assert report["config"]["seed"] == s, (
+            f"Expected config.seed={s}, got {report['config']['seed']}"
+        )

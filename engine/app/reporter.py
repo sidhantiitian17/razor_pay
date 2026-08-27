@@ -369,7 +369,7 @@ class ReportGenerator:
             "engine_version": "0.1.0",
             "schema_version": "1.0.0",
             "config": {
-                "seed": seed if seeds is None else seeds[0],
+                "seed": seed,
                 "seed_set": seed_set,
                 "n": len(dataset.truth_groups),
                 "mode": mode,
