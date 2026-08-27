@@ -18,6 +18,9 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      TEST_OPERATOR_EMAIL: ${{ secrets.TEST_OPERATOR_EMAIL }}
+      TEST_OPERATOR_PASSWORD: ${{ secrets.TEST_OPERATOR_PASSWORD }}
     steps:
       # fetch-depth: 0 — gitleaks-action runs `git log <parent>..<head>` over
       # the PR's commit range; the default shallow (depth-1) checkout doesn't
