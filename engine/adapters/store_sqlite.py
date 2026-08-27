@@ -40,18 +40,19 @@ class SQLiteStorageAdapter:
                 );
 
                 CREATE TABLE IF NOT EXISTS source_bank (
-                    bank_id TEXT PRIMARY KEY,
+                    bank_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     posted_at TEXT NOT NULL,
                     value_date TEXT NOT NULL,
                     amount_paise INTEGER NOT NULL,
                     utr TEXT,
                     narration TEXT NOT NULL,
-                    currency TEXT NOT NULL
+                    currency TEXT NOT NULL,
+                    PRIMARY KEY (run_id, bank_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS source_payout (
-                    payout_id TEXT PRIMARY KEY,
+                    payout_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     settled_at TEXT,
@@ -60,22 +61,24 @@ class SQLiteStorageAdapter:
                     tax_paise INTEGER NOT NULL,
                     utr TEXT,
                     status TEXT NOT NULL,
-                    currency TEXT NOT NULL
+                    currency TEXT NOT NULL,
+                    PRIMARY KEY (run_id, payout_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS source_ledger (
-                    ledger_id TEXT PRIMARY KEY,
+                    ledger_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     journal_id TEXT NOT NULL,
                     entry_date TEXT NOT NULL,
                     amount_paise INTEGER NOT NULL,
                     account TEXT NOT NULL,
                     reference TEXT NOT NULL,
-                    currency TEXT NOT NULL
+                    currency TEXT NOT NULL,
+                    PRIMARY KEY (run_id, ledger_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS truth_groups (
-                    group_id TEXT PRIMARY KEY,
+                    group_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     kind TEXT NOT NULL,
                     cohort TEXT NOT NULL,
@@ -84,11 +87,12 @@ class SQLiteStorageAdapter:
                     ledger_ids TEXT NOT NULL,
                     expected_outcome TEXT NOT NULL,
                     expected_tag TEXT,
-                    expected_bucket TEXT
+                    expected_bucket TEXT,
+                    PRIMARY KEY (run_id, group_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS match_groups (
-                    group_id TEXT PRIMARY KEY,
+                    group_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     kind TEXT NOT NULL,
                     bank_ids TEXT NOT NULL,
@@ -100,7 +104,8 @@ class SQLiteStorageAdapter:
                     tolerances_used TEXT NOT NULL,
                     tag TEXT NOT NULL,
                     reason TEXT NOT NULL,
-                    agent_turns INTEGER NOT NULL
+                    agent_turns INTEGER NOT NULL,
+                    PRIMARY KEY (run_id, group_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS link_decisions (
@@ -115,7 +120,7 @@ class SQLiteStorageAdapter:
                 );
 
                 CREATE TABLE IF NOT EXISTS exceptions (
-                    exception_id TEXT PRIMARY KEY,
+                    exception_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     row_ids TEXT NOT NULL,
                     bucket TEXT NOT NULL,
@@ -124,11 +129,12 @@ class SQLiteStorageAdapter:
                     proposed_action TEXT NOT NULL,
                     status TEXT NOT NULL,
                     assignee TEXT,
-                    resolution_note TEXT
+                    resolution_note TEXT,
+                    PRIMARY KEY (run_id, exception_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS agent_calls (
-                    call_id TEXT PRIMARY KEY,
+                    call_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     seq INTEGER NOT NULL,
                     turns INTEGER NOT NULL,
@@ -140,18 +146,20 @@ class SQLiteStorageAdapter:
                     prompt_redacted TEXT NOT NULL,
                     response TEXT NOT NULL,
                     guardrail_verdict TEXT NOT NULL,
-                    guardrail_reasons TEXT NOT NULL
+                    guardrail_reasons TEXT NOT NULL,
+                    PRIMARY KEY (run_id, call_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS closures (
-                    closure_id TEXT PRIMARY KEY,
+                    closure_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     target TEXT NOT NULL,
                     action TEXT NOT NULL,
                     before_state TEXT NOT NULL,
                     after_state TEXT NOT NULL,
                     applied_at TEXT NOT NULL,
-                    reversed_at TEXT
+                    reversed_at TEXT,
+                    PRIMARY KEY (run_id, closure_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS eval_sweeps (
