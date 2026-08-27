@@ -96,17 +96,12 @@ forbidden_modules = [
     "supabase",
 ]
 
-# "Grader isolation" contract (IMPLEMENTATION_PLAN.md §6 rule 2) is added once
-# engine/core/grader.py exists — a P5 deliverable, not P0. import-linter errors
-# hard on a source_modules entry that doesn't resolve, so declaring it early
-# breaks every phase's lint gate for no enforcement benefit. Re-add verbatim
-# in the P5 commit that creates grader.py:
-#
-# [[tool.importlinter.contracts]]
-# name = "Grader isolation"
-# type = "forbidden"
-# source_modules = ["engine.core.grader"]
-# forbidden_modules = [
-#     "engine.core.matching",
-#     "engine.app.agent",
-# ]
+[[tool.importlinter.contracts]]
+name = "Grader isolation"
+type = "forbidden"
+source_modules = ["engine.core.grader"]
+forbidden_modules = [
+    "engine.core.matching",
+    "engine.app.agent",
+]
+
