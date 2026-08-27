@@ -665,7 +665,11 @@ function LandingLiveStatsFallback({
       )}
     >
       {state === "loading" ? (
-        <div className="grid w-full max-w-3xl gap-2" aria-label="Loading live run statistics">
+        <div
+          role="status"
+          className="grid w-full max-w-3xl gap-2"
+          aria-label="Loading live run statistics"
+        >
           <div className="h-6 rounded border border-border bg-surface" />
           <div className="h-6 rounded border border-border bg-surface" />
           <div className="h-6 rounded border border-border bg-surface" />
@@ -1999,7 +2003,11 @@ function CopyCommand({ command }: { command: string }) {
 
   return (
     <div className="grid gap-2 rounded border border-border bg-background/70 p-3 sm:grid-cols-[1fr_auto] sm:items-center">
-      <pre className="min-w-0 overflow-x-auto whitespace-pre py-1">
+      <pre
+        className="min-w-0 overflow-x-auto whitespace-pre py-1"
+        tabIndex={0}
+        aria-label="Command output, scrollable"
+      >
         <code className="tnum text-xs leading-5 text-foreground">{command}</code>
       </pre>
       <TapTarget className="justify-self-start sm:justify-self-end">

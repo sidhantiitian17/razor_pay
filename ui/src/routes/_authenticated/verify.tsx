@@ -57,8 +57,12 @@ function VerifyPage() {
 
   const report = run.data?.report ?? null;
 
-  const anyError =
-    run.isError || calls.isError || controls.isError || closures.isError || exceptions.isError;
+  // Closures is intentionally service_role-only for regular operators; a
+  // permission-denied response is swallowed as an empty array by useClosures
+  // (see fetchClosures), so closures.isError never fires for that case.
+  // Exclude closures from the page-wide error gate regardless: a closures
+  // query failure must not blank the rest of the Verify page.
+  const anyError = run.isError || calls.isError || controls.isError || exceptions.isError;
   const anyPending =
     run.isPending ||
     (Boolean(runId) &&

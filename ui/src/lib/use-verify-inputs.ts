@@ -67,8 +67,31 @@ async function fetchClosures(runId: string): Promise<ClosureRow[]> {
     .order("applied_at", { ascending: true })
     .returns<ClosureRow[]>();
 
-  if (error) throw new Error(error.message);
+  // The closures table is intentionally service_role-only for regular
+  // authenticated operators (least-privilege by design). A permission-denied
+  // response is an expected condition, not a page-crashing error: swallow it
+  // and surface an empty result so the rest of the Verify page renders.
+  if (error) {
+    if (isPermissionDenied(error)) {
+      return [];
+    }
+    throw new Error(error.message);
+  }
   return data ?? [];
+}
+
+/** Heuristic match for RLS / permission-denied PostgREST responses. */
+function isPermissionDenied(error: unknown): boolean {
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message: unknown }).message)
+      : String(error);
+  return (
+    /42501/.test(message) ||
+    /permission denied/i.test(message) ||
+    /not authorized/i.test(message) ||
+    /rls policy/i.test(message)
+  );
 }
 
 export function useClosures(runId: string | undefined) {
