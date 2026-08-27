@@ -52,7 +52,11 @@ $$;
 GRANT EXECUTE ON FUNCTION public.has_role(uuid, public.app_role) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.is_recon_operator() TO authenticated, service_role;
 
--- Backfill: existing accounts keep their current operator access
+-- Backfill: Initial bootstrap for existing dev/test operator accounts.
+-- In this development environment (dtgwbqcjblbcgclogvtv), existing auth.users rows correspond
+-- strictly to provisioned CI/QA test operators. For new users, role assignment is NOT automatic;
+-- new signups have zero table access until an administrator explicitly inserts an 'operator' or
+-- 'admin' role into public.user_roles (enforced by RLS is_recon_operator() check).
 INSERT INTO public.user_roles (user_id, role)
 SELECT id, 'operator'::public.app_role FROM auth.users
 ON CONFLICT (user_id, role) DO NOTHING;
