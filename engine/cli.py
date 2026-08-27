@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import click
 
@@ -114,39 +114,52 @@ def run(
     from engine.app.publisher import ReportPublisher
 
     seed_list = _parse_seeds(seeds)
+    typed_mode = cast("Literal['rules_only', 'agent_only', 'rules_agent', 'random']", mode)
     click.echo(f"Running mode={mode} across {len(seed_list)} seed(s)...")
 
-    # For holdout range (101-120), generate aggregate or first holdout baseline
-    first_seed = seed_list[0]
-    seed_set = _classify_seed_set(first_seed)
-    dataset = generate_dataset(n=n, seed=first_seed)
-    typed_mode = cast("Literal['rules_only', 'agent_only', 'rules_agent', 'random']", mode)
-    typed_seed_set = cast("Literal['dev', 'holdout', 'regression']", seed_set)
     from engine.app.reporter import ReportGenerator
 
     generator = ReportGenerator()
-    report = generator.generate_report(
-        dataset=dataset,
-        mode=typed_mode,
-        seed=first_seed,
-        seed_set=typed_seed_set,
-    )
+    store = _resolve_storage_adapter(db=db) if publish else None
+    publisher = ReportPublisher(store=store) if store else None
 
-    write_baseline_report(report, report_out)
-    click.echo(f"Baseline report successfully published to {report_out}")
+    first_report: dict[str, Any] | None = None
 
-    if publish:
-        store = _resolve_storage_adapter(db=db)
-        publisher = ReportPublisher(store=store)
-        publisher.publish(
+    for s in seed_list:
+        seed_set = _classify_seed_set(s)
+        dataset = generate_dataset(n=n, seed=s)
+        typed_seed_set = cast("Literal['dev', 'holdout', 'regression']", seed_set)
+
+        report = generator.generate_report(
             dataset=dataset,
-            report=report,
-            match_groups=generator.last_match_groups,
-            link_decisions=generator.last_link_decisions,
-            agent_calls=generator.last_agent_calls,
-            closures=generator.last_closures,
+            mode=typed_mode,
+            seed=s,
+            seed_set=typed_seed_set,
+            seeds=seed_list,
         )
-        click.echo(f"Published reconciliation dataset and report to database ({db}).")
+
+        if first_report is None:
+            first_report = report
+
+        if publisher and store:
+            publisher.publish(
+                dataset=dataset,
+                report=report,
+                match_groups=generator.last_match_groups,
+                link_decisions=generator.last_link_decisions,
+                agent_calls=generator.last_agent_calls,
+                closures=generator.last_closures,
+            )
+
+    if first_report is not None:
+        write_baseline_report(first_report, report_out)
+        click.echo(
+            f"Executed {len(seed_list)} run(s). "
+            f"Baseline report successfully published to {report_out}"
+        )
+
+    if publish and store:
+        click.echo(f"Published {len(seed_list)} reconciliation run(s) to database ({db}).")
 
 
 @main.command()
