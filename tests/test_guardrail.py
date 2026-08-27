@@ -3,10 +3,12 @@
 from datetime import UTC, date, datetime
 
 from engine.core.guardrail import (
+    FORBIDDEN_TRUTH_PATTERNS,
     GuardrailConfig,
     GuardrailValidator,
     GuardrailVerdict,
     MatchProposal,
+    detect_truth_leak,
 )
 from engine.core.models import BankTxn, GatewayPayout, LedgerEntry
 
@@ -483,4 +485,32 @@ def test_guardrail_multiple_reasons_rejection() -> None:
     )
     v = validator.validate(proposal)
     assert v.status == "rejected"
-    assert set(v.reasons) == {"low_confidence", "single_field", "delta_too_large", "skew_too_large"}
+    assert set(v.reasons) == {
+        "low_confidence",
+        "single_field",
+        "delta_too_large",
+        "skew_too_large",
+    }
+
+
+def test_detect_truth_leak_patterns_and_types() -> None:
+    """Check 3.7 / I12: detect_truth_leak identifies forbidden truth leak patterns across types."""
+    # List of messages format (dict list)
+    poisoned_list = [
+        {"role": "user", "content": "Resolve BNK-01. cohort=clean, expected_outcome=resolved"},
+        {"role": "assistant", "content": "Ground truth: truth=clean, expected_tag=clean"},
+        {"role": "user", "content": "expected_bucket=duplicate leak test"},
+    ]
+    for msg in poisoned_list:
+        assert detect_truth_leak([msg]) is True
+
+    # String format
+    assert detect_truth_leak("Injected prompt: ground_truth is clean") is True
+    assert detect_truth_leak("Injected: cohort = drift_tolerated") is True
+    assert detect_truth_leak("Injected: truth = resolved") is True
+    assert detect_truth_leak("Clean prompt: Resolve unmatched residual row: BNK-000001.") is False
+
+    # Object / Dict format
+    assert detect_truth_leak({"prompt": "Clean message", "tags": ["unmatched"]}) is False
+    assert detect_truth_leak({"leak": "cohort=clean"}) is True
+    assert len(FORBIDDEN_TRUTH_PATTERNS) >= 5

@@ -24,3 +24,6 @@ ui/.nitro/
 # The user's raw Lovable download, kept locally as a reference/backup —
 # its content is mirrored into ui/, never tracked here directly.
 /UI-main/
+
+# Playwright generated test-operator session storage
+ui/tests_ui/.auth/
