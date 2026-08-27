@@ -66,6 +66,7 @@ class HeuristicLLMClient:
 
         last_msg = messages[-1]
         role = str(last_msg.get("role", ""))
+        tool_calls: list[dict[str, object]]
 
         # 1. User message -> turn 1: fetch candidates
         if role == "user":
@@ -93,53 +94,37 @@ class HeuristicLLMClient:
             if candidates and isinstance(candidates[0], dict):
                 cand = candidates[0]
                 target_id = str(cand.get("payout_id") or cand.get("ledger_id") or "")
-                if target_id:
-                    return LLMResponse(
-                        tool_calls=[
-                            {
-                                "name": "inspect_record",
-                                "arguments": {"record_id": target_id},
-                            }
-                        ],
-                        content=None,
-                        usage=self._calc_usage(tokens_in=440, tokens_out=75),
-                        latency_ms=30,
-                    )
+                tool_calls = [{"name": "inspect_record", "arguments": {"record_id": target_id}}]
+            else:
+                tool_calls = []
 
-            # No candidate found
             return LLMResponse(
-                tool_calls=[],
+                tool_calls=tool_calls,
                 content=None,
-                usage=self._calc_usage(tokens_in=380, tokens_out=30),
-                latency_ms=15,
+                usage=self._calc_usage(tokens_in=450, tokens_out=70),
+                latency_ms=30,
             )
 
         # 3. Tool response: inspect_record -> turn 3: propose match
         if role == "tool" and last_msg.get("name") == "inspect_record":
-            # Extract residual row_id from first user message
-            first_user = messages[0].get("content", "") if messages else ""
-            match = ROW_ID_PATTERN.search(str(first_user))
-            residual_id = match.group(1) if match else "BNK-0001"
-
-            # Extract inspected target_id from preceding tool call
-            inspected_id = ""
-            for m in reversed(messages[:-1]):
-                if m.get("name") == "fetch_candidates":
-                    c_data = self._parse_content(m.get("content", "{}"))
-                    c_list = c_data.get("candidates", []) if isinstance(c_data, dict) else []
-                    if c_list and isinstance(c_list[0], dict):
-                        inspected_id = str(
-                            c_list[0].get("payout_id") or c_list[0].get("ledger_id") or ""
-                        )
-                    break
-
-            if not inspected_id:
-                inspected_id = "pout_SYNTH00000001"
-
-            bank_id = residual_id if residual_id.startswith("BNK") else "BNK-0001"
-            payout_id = inspected_id if inspected_id.startswith("pout_") else residual_id
-
             rec_data = self._parse_content(last_msg.get("content", "{}"))
+
+            # Derive matched pair from history
+            bank_id = ""
+            payout_id = ""
+            for m in messages:
+                args = m.get("arguments", {}) if isinstance(m, dict) else {}
+                if isinstance(args, dict):
+                    if args.get("bank_id"):
+                        bank_id = str(args["bank_id"])
+                    if args.get("payout_id"):
+                        payout_id = str(args["payout_id"])
+
+            if not bank_id:
+                bank_id = "BNK-00000001"
+            if not payout_id:
+                payout_id = "PO-00000001"
+
             fields = ["amount", "date"]
             confidence = 0.85
             if isinstance(rec_data, dict) and rec_data.get("utr"):

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from engine.core.models import BankTxn, GatewayPayout, LedgerEntry
@@ -23,7 +23,7 @@ FORBIDDEN_TRUTH_PATTERNS = [
 ]
 
 
-def detect_truth_leak(messages: list[dict[str, object]] | str) -> bool:
+def detect_truth_leak(messages: list[dict[str, Any]] | str | object) -> bool:
     """Detect whether prompt or message payload leaks forbidden ground-truth labels (I12)."""
     import json
 

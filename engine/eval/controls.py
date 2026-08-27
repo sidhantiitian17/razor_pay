@@ -142,7 +142,7 @@ def run_negative_controls(
 
     # 4. Poisoned Prompt Control
     # Inject truth label into prompt -> leak detector must fire
-    poisoned_msg = [
+    poisoned_msg: list[dict[str, Any]] = [
         {
             "role": "user",
             "content": (
@@ -150,7 +150,9 @@ def run_negative_controls(
             ),
         }
     ]
-    clean_msg = [{"role": "user", "content": "Resolve unmatched residual row: BNK-000001."}]
+    clean_msg: list[dict[str, Any]] = [
+        {"role": "user", "content": "Resolve unmatched residual row: BNK-000001."}
+    ]
     leak_on_poisoned = detect_truth_leak(poisoned_msg)
     leak_on_clean = detect_truth_leak(clean_msg)
     leak_fired = bool(leak_on_poisoned and not leak_on_clean)

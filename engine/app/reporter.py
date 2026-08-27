@@ -67,9 +67,7 @@ def _serialize_closure(cl: Closure, run_id: str) -> dict[str, Any]:
         "applied_at": cl.applied_at.isoformat()
         if hasattr(cl.applied_at, "isoformat")
         else str(cl.applied_at),
-        "reversed_at": cl.reversed_at.isoformat()
-        if getattr(cl, "reversed_at", None) and hasattr(cl.reversed_at, "isoformat")
-        else None,
+        "reversed_at": cl.reversed_at.isoformat() if cl.reversed_at is not None else None,
     }
 
 
