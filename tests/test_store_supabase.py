@@ -17,16 +17,33 @@ class MockSupabaseTable:
         self._filter_col: str | None = None
         self._filter_val: Any = None
         self._select_count: str | None = None
+        self._select_cols: str = "*"
         self._pending_data: list[dict[str, Any]] = []
 
-    def upsert(self, records: list[dict[str, Any]] | dict[str, Any]) -> MockSupabaseTable:
+    def upsert(
+        self,
+        records: list[dict[str, Any]] | dict[str, Any],
+        on_conflict: str | None = None,
+    ) -> MockSupabaseTable:
         if isinstance(records, dict):
             records = [records]
         if self.name not in self.data_store:
             self.data_store[self.name] = []
+        conflict_keys = [k.strip() for k in on_conflict.split(",")] if on_conflict else []
         for r in records:
-            # Simple key-based replace or append
-            self.data_store[self.name].append(dict(r))
+            r = dict(r)
+            if conflict_keys:
+                # Replace existing row if all conflict keys match, else append.
+                matched = False
+                for i, existing in enumerate(self.data_store[self.name]):
+                    if all(existing.get(k) == r.get(k) for k in conflict_keys):
+                        self.data_store[self.name][i] = r
+                        matched = True
+                        break
+                if not matched:
+                    self.data_store[self.name].append(r)
+            else:
+                self.data_store[self.name].append(r)
         return self
 
     def insert(self, records: list[dict[str, Any]] | dict[str, Any]) -> MockSupabaseTable:
@@ -44,6 +61,7 @@ class MockSupabaseTable:
 
     def select(self, cols: str = "*", count: str | None = None) -> MockSupabaseTable:
         self._select_count = count
+        self._select_cols = cols
         return self
 
     def eq(self, column: str, value: Any) -> MockSupabaseTable:
@@ -231,3 +249,106 @@ def test_supabase_publisher_and_worker_end_to_end() -> None:
     loaded = adapter.load_run(run_id)
     assert loaded is not None
     assert "accuracy" in loaded
+
+
+def test_supabase_no_cross_seed_pk_collision() -> None:
+    """Prove compound on_conflict prevents cross-seed row collision.
+
+    The generator resets counters each generate_dataset() call, so bank_id='bank_001'
+    appears in every run. Before the compound-PK migration, upsert(on_conflict=bank_id)
+    would let seed-102 silently overwrite seed-101's bank_001 row. After the fix,
+    on_conflict='run_id,bank_id' keeps them separate.
+
+    This is a unit/integration test against the mock (exact Supabase behaviour verified
+    by the migration SQL when applied to a real project). The mock honours on_conflict
+    properly so the assertion here is meaningful.
+    """
+    mock_client = MockSupabaseClient()
+    adapter = SupabaseStorageAdapter(client=mock_client)  # type: ignore[arg-type]
+
+    run_a = "run-seed-101"
+    run_b = "run-seed-102"
+
+    # Both runs happen to produce the same bank_id — exactly as the generator does
+    # when counters reset. Before the fix this overwrote run_a's row.
+    bank_a = {
+        "bank_id": "bank_001",
+        "amount_paise": 10000,
+        "run_id": run_a,
+        "posted_at": "2024-01-01T00:00:00Z",
+        "value_date": "2024-01-01",
+        "utr": "UTR_A",
+        "narration": "Narration A",
+        "currency": "INR",
+    }
+    bank_b = {
+        "bank_id": "bank_001",
+        "amount_paise": 99999,
+        "run_id": run_b,
+        "posted_at": "2024-01-02T00:00:00Z",
+        "value_date": "2024-01-02",
+        "utr": "UTR_B",
+        "narration": "Narration B",
+        "currency": "INR",
+    }
+
+    adapter.save_sources(run_id=run_a, bank_txns=[bank_a], payouts=[], ledger_entries=[])
+    adapter.save_sources(run_id=run_b, bank_txns=[bank_b], payouts=[], ledger_entries=[])
+
+    all_rows = mock_client.data_store.get("source_bank", [])
+
+    # Must be 2 distinct rows — one per run — not 1 overwritten row.
+    assert len(all_rows) == 2, (
+        f"Expected 2 rows (one per run), got {len(all_rows)} — "
+        "cross-seed PK collision still occurring"
+    )
+
+    # Each run_id points to its own distinct data.
+    rows_a = [r for r in all_rows if r["run_id"] == run_a]
+    rows_b = [r for r in all_rows if r["run_id"] == run_b]
+    assert len(rows_a) == 1 and rows_a[0]["amount_paise"] == 10000
+    assert len(rows_b) == 1 and rows_b[0]["amount_paise"] == 99999
+
+
+def test_count_rows_for_run_uses_star_not_count_column() -> None:
+    """Prove count_rows_for_run uses select('*', count=...) not select('count', ...).
+
+    The earlier bug called .select("count", count=CountMethod.exact).  PostgREST
+    interprets the first arg as a column selector, so it tried to select a physical
+    'count' column that does not exist in any table — resulting in a 400 error
+    against a live Supabase project.  The correct form is select("*", ...) which
+    fetches all columns but only reads res.count for the metadata.
+
+    This mock-level test would have caught the bug: it records the cols arg passed
+    to .select() and asserts it is "*".
+    """
+
+    class ColumnCheckingTable(MockSupabaseTable):
+        """Raises if select() is called with a non-wildcard column list for count ops."""
+
+        def select(self, cols: str = "*", count: str | None = None) -> ColumnCheckingTable:
+            if count is not None and cols != "*":
+                raise ValueError(
+                    f"count_rows_for_run must use select('*', count=...), "
+                    f"got select({cols!r}, count=...) — "
+                    f"'{cols}' is not a real column and will 400 in production"
+                )
+            return super().select(cols, count)  # type: ignore[return-value]
+
+    class ColumnCheckingClient(MockSupabaseClient):
+        def table(self, table_name: str) -> ColumnCheckingTable:
+            return ColumnCheckingTable(table_name, self.data_store)
+
+    adapter = SupabaseStorageAdapter(
+        client=ColumnCheckingClient()  # type: ignore[arg-type]
+    )
+
+    # Save a run so the table has rows, then count — must not raise.
+    run_id = "run-count-test"
+    adapter.save_run(
+        run_id, {"run_id": run_id, "engine_version": "0.1.0", "schema_version": "1.0.0"}
+    )
+    counts = adapter.count_rows_for_run(run_id)
+
+    # Sanity: runs table has 1 row; method returned without raising.
+    assert counts["runs"] >= 0  # mock count may be 0 if eq filter gives 0; no ValueError = pass

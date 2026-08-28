@@ -95,57 +95,72 @@ class SupabaseStorageAdapter:
         payouts: list[dict[str, Any]],
         ledger_entries: list[dict[str, Any]],
     ) -> None:
-        """Persist source records for a run in chunks."""
+        """Persist source records for a run in chunks.
+
+        on_conflict targets the compound PK (run_id, entity_id) added by migration
+        20260828174500, so a re-published seed run updates its own rows only and
+        never overwrites another run's data.
+        """
         # 1. Bank txns
         bank_rows = [{**b, "run_id": run_id} for b in bank_txns]
         for chunk in _chunk_list(bank_rows):
-            self.client.table("source_bank").upsert(chunk).execute()
+            self.client.table("source_bank").upsert(chunk, on_conflict="run_id,bank_id").execute()
 
         # 2. Payouts
         payout_rows = [{**p, "run_id": run_id} for p in payouts]
         for chunk in _chunk_list(payout_rows):
-            self.client.table("source_payout").upsert(chunk).execute()
+            self.client.table("source_payout").upsert(
+                chunk, on_conflict="run_id,payout_id"
+            ).execute()
 
         # 3. Ledger entries
         ledger_rows = [{**el, "run_id": run_id} for el in ledger_entries]
         for chunk in _chunk_list(ledger_rows):
-            self.client.table("source_ledger").upsert(chunk).execute()
+            self.client.table("source_ledger").upsert(
+                chunk, on_conflict="run_id,ledger_id"
+            ).execute()
 
     def save_truth_groups(self, run_id: str, truth_groups: list[dict[str, Any]]) -> None:
         """Persist ground truth groups for a run."""
         rows = [{**tg, "run_id": run_id} for tg in truth_groups]
         for chunk in _chunk_list(rows):
-            self.client.table("truth_groups").upsert(chunk).execute()
+            self.client.table("truth_groups").upsert(chunk, on_conflict="run_id,group_id").execute()
 
     def save_match_groups(self, run_id: str, match_groups: list[dict[str, Any]]) -> None:
         """Persist resolved match groups for a run."""
         rows = [{**mg, "run_id": run_id} for mg in match_groups]
         for chunk in _chunk_list(rows):
-            self.client.table("match_groups").upsert(chunk).execute()
+            self.client.table("match_groups").upsert(chunk, on_conflict="run_id,group_id").execute()
 
     def save_link_decisions(self, run_id: str, link_decisions: list[dict[str, Any]]) -> None:
-        """Persist link-level decisions (TP, FP, FN, TN) for a run."""
+        """Persist link-level decisions (TP, FP, FN, TN) for a run.
+
+        link_decisions uses a BIGINT IDENTITY PK — no compound entity key to conflict
+        on, so we use plain insert (each call produces genuinely new rows).
+        """
         rows = [{**ld, "run_id": run_id} for ld in link_decisions]
         for chunk in _chunk_list(rows):
-            self.client.table("link_decisions").upsert(chunk).execute()
+            self.client.table("link_decisions").insert(chunk).execute()
 
     def save_exceptions(self, run_id: str, exceptions: list[dict[str, Any]]) -> None:
         """Persist open/classified exception records for a run."""
         rows = [{**e, "run_id": run_id} for e in exceptions]
         for chunk in _chunk_list(rows):
-            self.client.table("exceptions").upsert(chunk).execute()
+            self.client.table("exceptions").upsert(
+                chunk, on_conflict="run_id,exception_id"
+            ).execute()
 
     def save_agent_calls(self, run_id: str, agent_calls: list[dict[str, Any]]) -> None:
         """Persist agent trace and telemetry records for a run."""
         rows = [{**ac, "run_id": run_id} for ac in agent_calls]
         for chunk in _chunk_list(rows):
-            self.client.table("agent_calls").upsert(chunk).execute()
+            self.client.table("agent_calls").upsert(chunk, on_conflict="run_id,call_id").execute()
 
     def save_closures(self, run_id: str, closures: list[dict[str, Any]]) -> None:
         """Persist audit-grade closure journal entries for a run."""
         rows = [{**cl, "run_id": run_id} for cl in closures]
         for chunk in _chunk_list(rows):
-            self.client.table("closures").upsert(chunk).execute()
+            self.client.table("closures").upsert(chunk, on_conflict="run_id,closure_id").execute()
 
     def save_eval_sweeps(self, run_id: str, sweeps: list[dict[str, Any]]) -> None:
         """Persist sweep distribution rows for a run."""
@@ -252,7 +267,13 @@ class SupabaseStorageAdapter:
         return None
 
     def count_rows_for_run(self, run_id: str) -> dict[str, int]:
-        """Count stored rows across tables for a run."""
+        """Count stored rows across tables for a run.
+
+        Use select("*", count=CountMethod.exact) — PostgREST returns the row
+        count in the response metadata (res.count).  The earlier select("count",
+        ...) asked for a physical column named 'count' that does not exist in any
+        table, which would raise a 400 from the live API.
+        """
         tables = [
             "runs",
             "source_bank",
@@ -270,7 +291,7 @@ class SupabaseStorageAdapter:
         for t in tables:
             res = (
                 self.client.table(t)
-                .select("count", count=CountMethod.exact)
+                .select("*", count=CountMethod.exact)
                 .eq("run_id", run_id)
                 .execute()
             )
