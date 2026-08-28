@@ -60,3 +60,30 @@ def test_failure_path() -> None:
     assert final_req is not None
     assert final_req["status"] == "failed"
     assert "Simulated pipeline crash" in str(final_req.get("error_message", ""))
+
+
+def test_worker_seed_42_classified_as_regression() -> None:
+    """Check seed=42 is persisted as seed_set='regression', not 'dev'.
+
+    Runtime-confirmed bug: worker line previously said
+    ``seed_set = 'holdout' if 101<=seed<=120 else 'dev'``
+    which mislabelled seed 42 as 'dev', contradicting CLI._classify_seed_set.
+    """
+    store = MemoryStorageAdapter()
+    req_id = store.create_run_request(config={"n": 50, "seed": 42, "mode": "rules_only"})
+
+    worker = ReconciliationWorker(worker_id="worker-reg", store=store)
+    result = worker.run_once()
+    assert result is True
+
+    req = store.get_run_request(req_id)
+    assert req is not None
+    assert req["status"] == "complete"
+
+    run_id = req["result_run_id"]
+    assert run_id is not None
+
+    report = store.load_run(run_id)
+    assert report is not None
+    got = report.get("config", {}).get("seed_set")
+    assert got == "regression", f"seed=42 seed_set should be 'regression', got {got!r}"

@@ -59,7 +59,8 @@ class ReconciliationWorker:
             n = int(config.get("n", 100))
             seed = int(config.get("seed", 42))
             mode = str(config.get("mode", "rules_only"))
-            seed_set = "holdout" if 101 <= seed <= 120 else "dev"
+            # Mirror CLI._classify_seed_set: regression=42, holdout=101-120, dev=1-10.
+            seed_set = "regression" if seed == 42 else "holdout" if 101 <= seed <= 120 else "dev"
 
             dataset = generate_dataset(n=n, seed=seed)
             report = self.generator.generate_report(

@@ -42,17 +42,16 @@ class SupabaseStorageAdapter:
             or os.environ.get("VITE_SUPABASE_URL")
             or "https://dtgwbqcjblbcgclogvtv.supabase.co"
         )
-        self.key = (
-            key
-            or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-            or os.environ.get("SUPABASE_KEY")
-            or os.environ.get("VITE_SUPABASE_PUBLISHABLE_KEY")
-            or ""
-        )
+        # Require a server-side service_role key.  The VITE_SUPABASE_PUBLISHABLE_KEY
+        # is the browser anon key and must NEVER be used here — it bypasses RLS and
+        # violates the adapter's stated service_role contract (CHANGELOG.md §68).
+        self.key = key or os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or ""
 
         if not self.key:
             raise ValueError(
-                "SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY must be provided for Supabase adapter"
+                "SUPABASE_SERVICE_ROLE_KEY must be set for the Supabase adapter. "
+                "The browser anon/publishable key (VITE_SUPABASE_PUBLISHABLE_KEY) "
+                "is explicitly rejected — it does not have service_role privileges."
             )
 
         if create_client is None:

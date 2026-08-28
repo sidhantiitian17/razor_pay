@@ -102,8 +102,33 @@ def test_chunk_list() -> None:
 
 
 def test_supabase_adapter_missing_key() -> None:
-    with pytest.raises(ValueError, match="SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY"):
+    """Adapter raises ValueError when no key is provided at all."""
+    with pytest.raises(ValueError, match="SUPABASE_SERVICE_ROLE_KEY must be set"):
         SupabaseStorageAdapter(url="https://example.supabase.co", key="")
+
+
+def test_supabase_adapter_rejects_browser_anon_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """VITE_SUPABASE_PUBLISHABLE_KEY must NOT be accepted — it is the browser anon key.
+
+    Before the security fix the adapter silently fell back to this key, which
+    means --db supabase could write with anon privileges and bypass RLS.
+    Ensure the adapter raises rather than proceeding with that key.
+    """
+    monkeypatch.delenv("SUPABASE_SERVICE_ROLE_KEY", raising=False)
+    monkeypatch.setenv("VITE_SUPABASE_PUBLISHABLE_KEY", "anon-key-must-not-be-accepted")
+    with pytest.raises(ValueError, match="SUPABASE_SERVICE_ROLE_KEY must be set"):
+        SupabaseStorageAdapter(url="https://example.supabase.co")
+
+
+def test_supabase_adapter_accepts_service_role_key_from_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Adapter initialises successfully when SUPABASE_SERVICE_ROLE_KEY is set in env."""
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "service-role-secret")
+    # Pass a pre-built mock client so create_client is never called (no network).
+    mock_client = MockSupabaseClient()
+    adapter = SupabaseStorageAdapter(client=mock_client)  # type: ignore[arg-type]
+    assert adapter.client is mock_client
 
 
 def test_supabase_adapter_save_and_load_run() -> None:
