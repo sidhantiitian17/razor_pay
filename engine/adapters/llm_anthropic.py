@@ -18,7 +18,7 @@ incoherent fragment of the conversation from turn 2 onward.
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, cast
 
 from engine.config import HAIKU_INPUT_COST_PER_MTOK, HAIKU_OUTPUT_COST_PER_MTOK, MODEL_NAME
 from engine.ports.llm import LLMRequest, LLMResponse, UsageStats
@@ -50,7 +50,7 @@ class AnthropicLLMClient:
     ) -> None:
         # Imported lazily: `anthropic` is an optional extra ("llm"), not a
         # core dependency — the offline engine must import cleanly without it.
-        import anthropic  # type: ignore[import-not-found]
+        import anthropic  # type: ignore[import-not-found, unused-ignore]
 
         self._client = anthropic.Anthropic(api_key=api_key)
         self.model = model
@@ -122,13 +122,13 @@ class AnthropicLLMClient:
             system=SYSTEM_PROMPT,
             tools=[
                 {
-                    "name": t["name"],
-                    "description": t.get("description", ""),
-                    "input_schema": t["input_schema"],
+                    "name": str(t["name"]),
+                    "description": str(t.get("description", "")),
+                    "input_schema": cast("dict[str, Any]", t["input_schema"]),
                 }
                 for t in request.tools
             ],
-            messages=self._to_anthropic_messages(request.messages),
+            messages=cast("list[Any]", self._to_anthropic_messages(request.messages)),
         )
         latency_ms = int((time.perf_counter() - t0) * 1000)
 
