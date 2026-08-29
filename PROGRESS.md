@@ -65,6 +65,8 @@ needs a Lovable-side fix pass. tsc/eslint clean (0 errors).
 ## Master DoD (IMPLEMENTATION_PLAN.md §14)
 **All 20/20 checkboxes ticked with real evidence as of 2026-08-25 (commit `212107e`).** Full sign-off complete -- every requirement atom (R1-R10) and every engineering gate (all 14 phases green, blocker_recall, baseline+lift, negative controls, guardrail threshold, replay determinism, no truth leak in Python+UI, no client-side API key, poisoned-fixture verification, coverage+mutation score) independently verified before ticking, not rubber-stamped.
 
+> **2026-08-29 correction:** this sign-off was not complete. An external deep-dive eval found 3 integrity gaps it had missed -- the "bounded LLM agent" was a silently-broken no-op (0/23 residuals), the per-run ablation panel hardcoded 3 of its 4 arms, and no report disclosed that "agent" numbers came from an offline simulator rather than a live model. All 3 fixed in [Remediation-2] (PR #35, `dc770ef`). The baseline+lift and ablation gates in particular should be considered re-established as of that merge, not 2026-08-25.
+
 ## Blockers
 (none)
 
