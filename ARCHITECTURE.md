@@ -100,6 +100,19 @@ Institutional 3-way financial reconciliation engine (Bank Statement <-> Gateway 
 - Every closure records before/after state snapshots enabling exact, complete reversal (`close --reverse`, I14).
 - Re-running the pipeline on closed state produces 0 new closures (second-pass convergence, R2).
 
+### 2.6 LLM Backend Selection & Disclosure
+- The bounded agent loop (`engine/app/agent.py`) is backend-agnostic: it drives any client implementing the `LLMClient` protocol in `engine/ports/llm.py`.
+- Two adapters implement that protocol:
+  - `engine/adapters/llm_anthropic.py` — a live Anthropic Messages API client (optional `llm` extra; `import anthropic` is lazy so the core engine imports without it).
+  - `engine/adapters/llm_heuristic.py` — a deterministic offline simulator used for tests, CI, and any environment with no API key.
+- `engine/adapters/select.py::select_llm_client()` picks the backend: live Anthropic when `ANTHROPIC_API_KEY` is set **and** the `anthropic` package is installed, otherwise the heuristic simulator. It returns `(client, backend_name)`; the caller records `backend_name` verbatim in `config.agent_backend` on every published report (`"none" | "heuristic" | "live"`). The selection is never silent — a reviewer reading a report always knows whether "agent" numbers came from a real model.
+- `agent.py` threads each turn's assistant `tool_use` blocks (with stable `toolu_*` ids) plus the paired `tool_result` back into the message history, so a live model reconstructs a schema-valid multi-turn transcript. The heuristic/mock clients only read the message tail and are unaffected.
+
+### 2.7 Genuine Per-Run Ablation
+- `engine/app/reporter.py::generate_report()` populates the `ablation` block by genuinely re-running the other rule/agent arms on the same dataset/seed (companion calls with `_include_ablation=False` to bound recursion). No arm is a hardcoded constant.
+- The `random` arm is sourced from the real random matcher in `engine/eval/controls.py`.
+- `engine/eval/sweep.py` and `engine/eval/ablation.py` opt out of this in-report recomputation (they already do their own multi-mode reruns), so the standalone sweep cost is unchanged. A single `engine.cli run` now does ~3-4x the pipeline work it used to.
+
 ---
 
 ## 3. Database Schema (12 Relational Tables)
