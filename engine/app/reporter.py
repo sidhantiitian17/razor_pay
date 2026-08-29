@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from engine.adapters.llm_heuristic import HeuristicLLMClient
+from engine.adapters.select import select_llm_client
 from engine.app.agent import AgentCallResult, AgentRunner, compute_agent_turn_stats
 from engine.app.closer import ClosureEngine
 from engine.core.classify import ExceptionClassifier
@@ -91,8 +92,19 @@ class ReportGenerator:
         seeds: list[int] | None = None,
         dry_run: bool = False,
         llm_client: LLMClient | None = None,
+        _include_ablation: bool = True,
     ) -> dict[str, object]:
-        """Generate a complete reconciliation report adhering to report.schema.json."""
+        """Generate a complete reconciliation report adhering to report.schema.json.
+
+        `_include_ablation` is an internal switch: the primary call (default
+        True) genuinely reruns the other three ablation arms on this same
+        dataset/seed to populate `ablation`. Those companion reruns pass
+        `_include_ablation=False` so they don't recurse into computing their
+        own nested ablation block — that block is unused and discarded on a
+        companion call, since only its accuracy/cost figures are read. This
+        mirrors the same "rerun per mode" cost `engine.eval.ablation` already
+        pays for the standalone sweep; nothing here is estimated or hardcoded.
+        """
         wall_clock_start = time.perf_counter()
         run_id = str(uuid.uuid4())
 
@@ -127,8 +139,21 @@ class ReportGenerator:
         t_agent_start = time.perf_counter()
         t_guard_elapsed = 0.0
 
+        agent_backend = "none"  # this run's mode never invokes an LLM agent
+
         if mode in ("rules_agent", "agent_only"):
-            client = llm_client or self.llm_client or HeuristicLLMClient()
+            if llm_client is not None:
+                client = llm_client
+                agent_backend = (
+                    "live" if not isinstance(client, HeuristicLLMClient) else "heuristic"
+                )
+            elif self.llm_client is not None:
+                client = self.llm_client
+                agent_backend = (
+                    "live" if not isinstance(client, HeuristicLLMClient) else "heuristic"
+                )
+            else:
+                client, agent_backend = select_llm_client()
             runner = AgentRunner(
                 llm_client=client,
                 guardrail_config=GuardrailConfig(min_confidence=0.70, min_fields=2),
@@ -338,18 +363,57 @@ class ReportGenerator:
             for exc in exceptions
         ]
 
-        # Execute genuine negative controls
-        controls_res = run_negative_controls(dataset=dataset, save_to_disk=False)
+        # Ablation arms — every arm below is genuinely computed on this same
+        # dataset/seed, never a hardcoded stand-in. The arm matching this
+        # run's own mode reuses the numbers already computed above; the
+        # other two rule/agent arms are obtained by rerunning the full
+        # pipeline in dry_run mode (the same "rerun per mode" cost
+        # engine.eval.ablation already pays for its standalone sweep — see
+        # `_include_ablation` on this method). The random arm always comes
+        # from the negative-controls random matcher (engine/eval/controls.py),
+        # which already runs a real random sampler independent of `mode`.
+        arm_metrics: dict[str, tuple[float, float, float]] = {
+            mode: (match_rate_val, bp_p_val, cost_usd)
+        }
+        if _include_ablation:
+            for other_mode in ("rules_only", "agent_only", "rules_agent"):
+                if other_mode == mode:
+                    continue
+                companion = self.generate_report(
+                    dataset=dataset,
+                    measurement_mode=measurement_mode,
+                    mode=other_mode,
+                    seed=seed,
+                    seed_set=seed_set,
+                    dry_run=True,
+                    llm_client=llm_client,
+                    _include_ablation=False,
+                )
+                c_acc = companion["accuracy"]
+                c_cost = companion["cost"]
+                assert isinstance(c_acc, dict) and isinstance(c_cost, dict)
+                arm_metrics[other_mode] = (
+                    float(c_acc["match_rate"]["value"]),
+                    float(c_acc["links"]["bank_payout"]["precision"]["value"]),
+                    float(c_cost["cost_usd"]),
+                )
+        else:
+            # This IS a companion call — its own ablation block is never
+            # read by the caller (only accuracy/cost are), so fill the
+            # remaining arms with cheap, schema-valid placeholders rather
+            # than recursing further.
+            for other_mode in ("rules_only", "agent_only", "rules_agent"):
+                arm_metrics.setdefault(other_mode, (0.0, 0.0, 0.0))
 
-        # Calculate ablation baseline values
-        rules_only_mr = match_rate_val if mode == "rules_only" else 0.70
-        rules_only_p = bp_p_val if mode == "rules_only" else 0.98
-        rules_agent_mr = match_rate_val if mode == "rules_agent" else 0.78
-        rules_agent_p = bp_p_val if mode == "rules_agent" else 0.96
-        agent_only_mr = match_rate_val if mode == "agent_only" else 0.65
-        agent_only_p = bp_p_val if mode == "agent_only" else 0.92
-        random_mr = match_rate_val if mode == "random" else 0.01
-        random_p = float(controls_res.get("random_matcher", {}).get("observed_precision", 0.08))
+        rules_only_mr, rules_only_p, rules_only_cost = arm_metrics["rules_only"]
+        agent_only_mr, agent_only_p, agent_only_cost = arm_metrics["agent_only"]
+        rules_agent_mr, rules_agent_p, rules_agent_cost = arm_metrics["rules_agent"]
+
+        # Execute genuine negative controls (also the sole, real source for
+        # the random-arm figures below — see engine/eval/controls.py).
+        controls_res = run_negative_controls(dataset=dataset, save_to_disk=False)
+        random_mr = float(controls_res.get("random_matcher", {}).get("observed_match_rate", 0.0))
+        random_p = float(controls_res.get("random_matcher", {}).get("observed_precision", 0.0))
 
         lift_val = round(rules_agent_mr - rules_only_mr, 4)
         prec_cost_val = round(rules_agent_p - rules_only_p, 4)
@@ -372,6 +436,7 @@ class ReportGenerator:
                 "n": len(dataset.truth_groups),
                 "mode": mode,
                 "model": "claude-haiku-4-5-20251001",
+                "agent_backend": agent_backend,
                 "temperature": 0.0,
                 "prompt_hash": f"sha256:{hashlib.sha256(b'v1_system_prompt').hexdigest()}",
                 "max_turns": 6,
@@ -443,17 +508,17 @@ class ReportGenerator:
                 "rules_only": {
                     "match_rate": rules_only_mr,
                     "precision": rules_only_p,
-                    "cost_usd": 0.0,
+                    "cost_usd": rules_only_cost,
                 },
                 "agent_only": {
                     "match_rate": agent_only_mr,
                     "precision": agent_only_p,
-                    "cost_usd": cost_usd if mode == "agent_only" else 0.045,
+                    "cost_usd": agent_only_cost,
                 },
                 "rules_agent": {
                     "match_rate": rules_agent_mr,
                     "precision": rules_agent_p,
-                    "cost_usd": cost_usd if mode == "rules_agent" else 0.025,
+                    "cost_usd": rules_agent_cost,
                 },
                 "random": {
                     "match_rate": random_mr,
@@ -500,6 +565,9 @@ class ReportGenerator:
                     "passed": bool(controls_res["random_matcher"]["passed"]),
                     "observed_precision": float(
                         controls_res["random_matcher"]["observed_precision"]
+                    ),
+                    "observed_match_rate": float(
+                        controls_res["random_matcher"]["observed_match_rate"]
                     ),
                 },
                 "poisoned_prompt": {

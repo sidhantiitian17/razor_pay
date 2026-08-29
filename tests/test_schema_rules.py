@@ -48,6 +48,7 @@ def _make_minimal_report(**overrides: object) -> dict[str, object]:
             "n": 100,
             "mode": "rules_agent",
             "model": "claude-haiku-4-5-20251001",
+            "agent_backend": "heuristic",
             "temperature": 0,
             "prompt_hash": "sha256:abc123",
             "max_turns": 6,
@@ -156,7 +157,11 @@ def _make_minimal_report(**overrides: object) -> dict[str, object]:
         "controls": {
             "shuffled_truth": {"passed": True, "observed_match_rate": 0.02},
             "null_agent": {"passed": True, "identical_to_rules_only": True},
-            "random_matcher": {"passed": True, "observed_precision": 0.08},
+            "random_matcher": {
+                "passed": True,
+                "observed_precision": 0.08,
+                "observed_match_rate": 0.01,
+            },
             "poisoned_prompt": {"passed": True, "leak_detector_fired": True},
             "inverted_rule": {"passed": True, "tests_failed": 7},
             "disabled_dedup": {"passed": True, "duplicate_bucket_size": 0},

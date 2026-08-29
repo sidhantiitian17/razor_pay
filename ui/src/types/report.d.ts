@@ -34,6 +34,10 @@ export interface Config {
   n: number;
   mode: "rules_only" | "agent_only" | "rules_agent" | "random";
   model: string;
+  /**
+   * Which LLM backend actually produced this run's agent numbers: a live Anthropic call, the offline heuristic simulator, or none (mode never invoked an agent). Never omitted, never silently swapped.
+   */
+  agent_backend: "live" | "heuristic" | "none";
   temperature: number;
   prompt_hash: string;
   max_turns: number;
@@ -192,6 +196,7 @@ export interface Controls {
   random_matcher: {
     passed: boolean;
     observed_precision: number;
+    observed_match_rate: number;
   };
   poisoned_prompt: {
     passed: boolean;

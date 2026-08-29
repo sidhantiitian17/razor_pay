@@ -30,13 +30,26 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 /** Baseline comparison: four ablation arms, plus agent lift and precision cost. */
-export function AblationPanel({ ablation }: { ablation: Ablation }) {
+export function AblationPanel({
+  ablation,
+  agentBackend,
+}: {
+  ablation: Ablation;
+  agentBackend?: "live" | "heuristic" | "none";
+}) {
   const rows = ARMS.map(({ key, label }) => ({
     label,
     "match rate %": ablation[key].match_rate * 100,
     "precision %": ablation[key].precision * 100,
     cost_usd: ablation[key].cost_usd,
   }));
+
+  const backendNote =
+    agentBackend === "live"
+      ? "agent_only / rules_agent this run came from a live Anthropic call."
+      : agentBackend === "heuristic"
+        ? "agent_only / rules_agent this run came from the offline heuristic simulator, not a live model call — set ANTHROPIC_API_KEY to use a real one."
+        : undefined;
 
   return (
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
@@ -46,6 +59,7 @@ export function AblationPanel({ ablation }: { ablation: Ablation }) {
           <p className="text-xs text-muted-foreground">
             Each arm reruns the same seeded dataset with a different matcher configuration.
           </p>
+          {backendNote && <p className="mt-1 text-xs text-muted-foreground/80">{backendNote}</p>}
         </header>
 
         <div className="h-64 w-full">

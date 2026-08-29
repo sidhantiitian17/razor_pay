@@ -22,6 +22,7 @@ from engine.core.grader import LinkGrader
 from engine.core.guardrail import detect_truth_leak
 from engine.core.matching.blocker import build_candidate_space
 from engine.core.matching.rules import DeterministicMatcher, InvertedMatcher
+from engine.core.metrics import compute_reconciliation_metrics
 from engine.core.models import (
     ExceptionBucket,
     GroupKind,
@@ -134,10 +135,31 @@ def run_negative_controls(
     rnd_conf = grader.confusion_matrix(rnd_decisions)
     rnd_metrics = grader.compute_link_metrics(rnd_conf)
     observed_p = round(float(rnd_metrics["precision"]["value"]), 4)
+
+    # Genuine match_rate for the random arm — exact-match against ground truth,
+    # same formula and denominator as the production accuracy.match_rate (§4.3).
+    # No exceptions are classified for this control (empty), which only means
+    # every row the random matcher didn't touch is simply absent from both the
+    # resolved and unresolved sets — it does not affect the ratio below.
+    rnd_recon_metrics = compute_reconciliation_metrics(
+        bank_txns=dataset.bank_txns,
+        gateway_payouts=dataset.gateway_payouts,
+        ledger_entries=dataset.ledger_entries,
+        matched_groups=random_groups,
+        exceptions=[],
+        truth_groups=dataset.truth_groups,
+        candidate_space_size=space.size,
+    )
+    observed_mr = round(float(rnd_recon_metrics.match_rate.value), 4)
+
     results["random_matcher"] = {
         "passed": bool(observed_p < 0.35),
         "observed_precision": observed_p,
-        "detail": f"Random matcher performs at chance floor (precision={observed_p})",
+        "observed_match_rate": observed_mr,
+        "detail": (
+            f"Random matcher performs at chance floor "
+            f"(precision={observed_p}, match_rate={observed_mr})"
+        ),
     }
 
     # 4. Poisoned Prompt Control

@@ -2,6 +2,75 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [Remediation-2] — Honest Agent Backend & Genuine Ablation — 2026-08-29
+
+### Fixed
+- **`HeuristicLLMClient` silently resolved zero residuals (`engine/adapters/llm_heuristic.py`):**
+  The candidate-id derivation loop looked for an `arguments` key directly on
+  each transcript message — a key that never existed at that level — so it
+  always fell through to a hardcoded literal id (`BNK-00000001`/`PO-00000001`)
+  that never matched a real generated record. Every proposal was rejected by
+  the guardrail as `hallucinated_id`, meaning the "bounded LLM agent" numbers
+  previously reported (e.g. rules+agent match rate ~84.6%, positive
+  `agent_lift`) were not reproducible from the shipped code. Independently
+  verified before the fix: 0/23 residuals resolved on seed 42, 23/23
+  `hallucinated_id`.
+- **`agent.py` never recorded the assistant's own tool-use turns
+  (`engine/app/agent.py`):** `AgentRunner.resolve_residual` appended only
+  tool-result messages to the transcript, never the assistant's tool_use
+  turn that preceded them — the root cause of the derivation bug above, and
+  a blocker for wiring any real multi-turn LLM backend (a live model cannot
+  reconstruct a valid transcript without its own prior turns). Each
+  tool_use block is now assigned a stable id and recorded before its
+  result is appended.
+- **Per-run ablation panel fabricated 3 of its 4 arms
+  (`engine/app/reporter.py`):** When a report was generated for one mode,
+  the other three modes' `match_rate`/`precision` in the same report's
+  `ablation` block were hardcoded constants (`0.70`/`0.98`, `0.65`/`0.92`,
+  `0.01`), not computed for that dataset/seed — while the UI's
+  `ablation-panel.tsx` caption stated "Each arm reruns the same seeded
+  dataset with a different matcher configuration," which was false for
+  three of its four bars. All four arms are now genuinely computed per
+  run: the two other rule/agent arms via a real dry-run rerun of the same
+  dataset/seed (the same cost `engine.eval.ablation` already pays for its
+  standalone sweep), and the random arm from the negative-controls random
+  matcher's real `observed_match_rate` (added below) rather than a guess.
+- **Random-matcher control never reported a match rate
+  (`engine/eval/controls.py`):** only `observed_precision` was computed;
+  `observed_match_rate` is now derived from the same
+  `compute_reconciliation_metrics` formula used everywhere else, against
+  the control's real randomly-sampled groups.
+
+### Added
+- **`config.agent_backend`** (`"live" | "heuristic" | "none"`) on every
+  published report — discloses whether `agent_only`/`rules_agent` numbers
+  came from a live Anthropic call, the offline heuristic simulator, or
+  weren't invoked at all this run. Never omitted, never silently swapped.
+- **`engine/adapters/llm_anthropic.py`** — a real `LLMClient` implementation
+  backed by the official `anthropic` SDK, reconstructing a schema-valid
+  multi-turn transcript (tool_use/tool_result blocks with ids) from the
+  engine's generic message log.
+- **`engine/adapters/select.py`** — `select_llm_client()`, the factory
+  `ReportGenerator` uses when no client is explicitly injected: live when
+  `ANTHROPIC_API_KEY` is set and the `anthropic` extra is installed,
+  heuristic otherwise.
+
+### Changed
+- **Re-measured holdout results (seeds 101–120) after the fixes above:**
+  match rate mean 0.702 (stdev 0.0151, worst seed 0.67 — statistically
+  unchanged from before, since `match_rate` requires an exact 3-way match
+  and the agent still never proposes `ledger_ids`; see README §5). What
+  *did* change: bank–payout link recall genuinely improves 75.7% → 81.1%
+  with the agent enabled (previously masked by the fabrication above,
+  which reported a headline lift that didn't reproduce at all). Extending
+  `propose_match` to resolve the ledger side too — so a correct agent
+  resolution can register on the headline `match_rate` — is the natural
+  next step and is tracked as a known limitation, not smoothed over here.
+- `engine/eval/sweep.py` and `engine/eval/ablation.py` now pass
+  `_include_ablation=False` on their internal `generate_report` calls, so
+  the new genuine per-run ablation rerun doesn't recursively multiply their
+  own already-correct sweep cost.
+
 ## [Remediation] — Complete 9-Finding Audit Remediation — 2026-08-27
 
 ### Fixed
