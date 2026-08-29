@@ -13,6 +13,7 @@ from typing import Any, Literal
 
 from engine.app.reporter import ReportGenerator
 from engine.core.generator.build import generate_dataset
+from engine.eval.controls import run_negative_controls
 
 
 def _parse_seeds(seed_str: str) -> list[int]:
@@ -63,6 +64,7 @@ def run_ablation(
             seed=seed,
             seed_set=typed_seed_set,
             dry_run=True,
+            _include_ablation=False,
         )
         acc_r = rep_rules["accuracy"]
         assert isinstance(acc_r, dict)
@@ -79,6 +81,7 @@ def run_ablation(
             seed=seed,
             seed_set=typed_seed_set,
             dry_run=True,
+            _include_ablation=False,
         )
         acc_a = rep_agent["accuracy"]
         assert isinstance(acc_a, dict)
@@ -97,6 +100,7 @@ def run_ablation(
             seed=seed,
             seed_set=typed_seed_set,
             dry_run=True,
+            _include_ablation=False,
         )
         acc_ra = rep_ra["accuracy"]
         assert isinstance(acc_ra, dict)
@@ -108,9 +112,12 @@ def run_ablation(
         assert isinstance(cost_ra, dict)
         rules_agent_cost.append(float(cost_ra["cost_usd"]))
 
-        # Arm 4: random
-        random_mr.append(0.01)
-        random_p.append(0.08)
+        # Arm 4: random — sourced from the negative-controls random matcher
+        # (engine/eval/controls.py), a real random sampler graded against
+        # truth, not a hardcoded chance-floor guess.
+        controls_res = run_negative_controls(dataset=dataset, save_to_disk=False)
+        random_mr.append(float(controls_res["random_matcher"]["observed_match_rate"]))
+        random_p.append(float(controls_res["random_matcher"]["observed_precision"]))
         random_cost.append(0.0)
 
     avg_r_mr = sum(rules_only_mr) / len(rules_only_mr)

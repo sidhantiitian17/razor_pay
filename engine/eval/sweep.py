@@ -92,6 +92,7 @@ def run_sweep(
             seed=seed,
             seed_set=typed_seed_set,
             dry_run=True,
+            _include_ablation=False,
         )
 
         acc = report["accuracy"]
