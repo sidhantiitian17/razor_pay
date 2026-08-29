@@ -9,6 +9,14 @@ Supabase project ref: dtgwbqcjblbcgclogvtv
 Holdout seed set in use: 101-120
 Holdout burns: none
 
+## [Remediation-2] Honest Agent Backend & Genuine Ablation -- 2026-08-29
+Merged PR #35 (`dc770ef`). External deep-dive eval found 3 integrity gaps the §14 Master DoD 20/20 sign-off had missed; all 3 independently reproduced (god + Pam) then fixed:
+1. **`HeuristicLLMClient` resolved 0/23 residuals** -- a transcript-key bug fell through to hardcoded `BNK-/PO-00000001` ids, every proposal rejected `hallucinated_id`. README's ~84.6% rules+agent figure was not reproducible. Fixed in `engine/adapters/llm_heuristic.py` + `engine/app/agent.py` (assistant tool_use turns now threaded with stable ids).
+2. **Per-run ablation panel fabricated 3 of 4 arms** (`engine/app/reporter.py` hardcoded `0.70/0.98`, `0.65/0.92`, `0.01`). Now every arm is genuinely recomputed on the run's own dataset/seed (~3-4x per-run cost; `sweep.py`/`ablation.py` opt out).
+3. **No real LLM + no disclosure** -- added `engine/adapters/llm_anthropic.py` (live Anthropic client, optional `llm` extra), `engine/adapters/select.py` (auto-select on `ANTHROPIC_API_KEY`), and a required `config.agent_backend` field (`none`/`heuristic`/`live`) on every report.
+README holdout numbers honestly re-measured: `match_rate` statistically unchanged (agent proposes only bank-payout pairs, never `ledger_ids`, so it cannot move the strict 3-way exact-match metric -- tracked as a known limitation), but bank-payout link recall genuinely improves 75.7% -> 81.1% with the agent enabled. 3 regression tests added. `ARCHITECTURE.md` 2.6/2.7 document the change. CI green; 187 tests, ruff/mypy --strict/import-linter/gitleaks all clean.
+**Not yet reflected on the live Lovable site** (`ablation-panel.tsx` caption + honest numbers) -- needs a Lovable-side change + redeploy.
+
 ## [Remediation] Complete 9-Finding Audit Remediation -- 2026-08-27
 Remediated all 7 backend/CI/persistence findings from Ryan's audit (with UI-specific findings addressed directly in Lovable):
 1. **`crosscheck_run` Completeness:** Extended `engine/tools/crosscheck.py` to compare all relational table counts (`match_groups`, `link_decisions`, `agent_calls`, `closures`, `control_results`) against report JSON metrics and fail loudly on mismatches. Added failure unit tests in `tests/test_live_wiring.py`.
