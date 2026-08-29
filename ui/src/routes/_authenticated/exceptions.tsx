@@ -59,6 +59,8 @@ function toggle(list: string[], value: string): string[] {
   return list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 }
 
+const EMPTY_EXCEPTION_ROWS: ExceptionRow[] = [];
+
 function ExceptionsPage() {
   const run = useRunReport();
   const runId = run.data?.run_id;
@@ -72,7 +74,7 @@ function ExceptionsPage() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const rows = exceptions.data ?? [];
+  const rows = exceptions.data ?? EMPTY_EXCEPTION_ROWS;
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
