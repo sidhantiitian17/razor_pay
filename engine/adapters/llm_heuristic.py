@@ -109,21 +109,70 @@ class HeuristicLLMClient:
         if role == "tool" and last_msg.get("name") == "inspect_record":
             rec_data = self._parse_content(last_msg.get("content", "{}"))
 
-            # Derive matched pair from history
+            # Derive the actual bank/payout pair from the assistant's own
+            # earlier tool_use turns (agent.py records these as
+            # {"role": "assistant", "tool_calls": [...]}). Previously this
+            # loop looked for an "arguments" key directly on each message —
+            # a key that never existed at that level — so it always fell
+            # through to a hardcoded literal ID that never matched a real
+            # generated record, and every proposal was rejected by the
+            # guardrail as hallucinated_id. Scanning each turn's tool_calls
+            # is what actually recovers the row being resolved.
             bank_id = ""
             payout_id = ""
             for m in messages:
-                args = m.get("arguments", {}) if isinstance(m, dict) else {}
-                if isinstance(args, dict):
-                    if args.get("bank_id"):
-                        bank_id = str(args["bank_id"])
-                    if args.get("payout_id"):
-                        payout_id = str(args["payout_id"])
+                if not isinstance(m, dict):
+                    continue
+                tool_calls_raw = m.get("tool_calls")
+                tool_calls_list = tool_calls_raw if isinstance(tool_calls_raw, list) else []
+                for tc in tool_calls_list:
+                    if not isinstance(tc, dict):
+                        continue
+                    args = tc.get("arguments", {})
+                    if isinstance(args, dict):
+                        if args.get("bank_id"):
+                            bank_id = str(args["bank_id"])
+                        if args.get("payout_id"):
+                            payout_id = str(args["payout_id"])
+                # Also recover the candidate the fetch_candidates tool
+                # actually returned, in case the model only supplied the
+                # opposite side of the pair itself.
+                if m.get("role") == "tool" and m.get("name") == "fetch_candidates":
+                    data = self._parse_content(m.get("content", "{}"))
+                    candidates = data.get("candidates", []) if isinstance(data, dict) else []
+                    if candidates and isinstance(candidates[0], dict):
+                        cand = candidates[0]
+                        if not payout_id and cand.get("payout_id"):
+                            payout_id = str(cand["payout_id"])
+                        if not bank_id and cand.get("ledger_id"):
+                            # payout-side residual inspecting a ledger candidate;
+                            # bank_id stays empty (out of scope for this arm).
+                            pass
 
-            if not bank_id:
-                bank_id = "BNK-00000001"
-            if not payout_id:
-                payout_id = "PO-00000001"
+            if not bank_id or not payout_id:
+                # No genuine candidate pair was recoverable from this
+                # transcript (e.g. an isolated residual with no candidates
+                # in range) — propose nothing rather than guess, so the
+                # guardrail sees an honest empty proposal instead of a
+                # fabricated ID.
+                return LLMResponse(
+                    tool_calls=[
+                        {
+                            "name": "propose_match",
+                            "arguments": {
+                                "bank_id": bank_id or "",
+                                "payout_id": payout_id or "",
+                                "ledger_ids": [],
+                                "confidence": 0.0,
+                                "fields_matched": [],
+                                "reason": "No candidate pair recovered from transcript",
+                            },
+                        }
+                    ],
+                    content=None,
+                    usage=self._calc_usage(tokens_in=480, tokens_out=90),
+                    latency_ms=32,
+                )
 
             fields = ["amount", "date"]
             confidence = 0.85

@@ -190,9 +190,30 @@ class AgentRunner:
             if not resp.tool_calls:
                 break
 
+            # Assign a stable id to every tool_use block in this turn before
+            # recording the assistant's turn, so the paired tool-result
+            # message (and any real LLM adapter reconstructing a valid
+            # Anthropic-style transcript) can reference it unambiguously.
+            for tool_call in resp.tool_calls:
+                if not tool_call.get("id"):
+                    tool_call["id"] = f"toolu_{uuid.uuid4().hex[:12]}"
+
+            # Record the assistant's own turn (its tool_use blocks) in the
+            # transcript. The heuristic/mock clients only ever look at the
+            # tail of `messages`, so this is transparent to them; a live LLM
+            # adapter needs it to reconstruct a schema-valid multi-turn call.
+            messages.append(
+                {
+                    "role": "assistant",
+                    "tool_calls": resp.tool_calls,
+                    "content": resp.content,
+                }
+            )
+
             for tool_call in resp.tool_calls:
                 turns += 1
                 tool_name = str(tool_call.get("name"))
+                tool_use_id = str(tool_call.get("id", ""))
                 args = tool_call.get("arguments", {})
                 if not isinstance(args, dict):
                     args = {}
@@ -221,6 +242,7 @@ class AgentRunner:
                         {
                             "role": "tool",
                             "name": tool_name,
+                            "tool_use_id": tool_use_id,
                             "content": str({"candidates": candidates}),
                         }
                     )
@@ -262,6 +284,7 @@ class AgentRunner:
                         {
                             "role": "tool",
                             "name": tool_name,
+                            "tool_use_id": tool_use_id,
                             "content": str(info),
                         }
                     )
