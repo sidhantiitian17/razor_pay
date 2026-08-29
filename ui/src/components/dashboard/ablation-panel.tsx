@@ -59,9 +59,7 @@ export function AblationPanel({
           <p className="text-xs text-muted-foreground">
             Each arm reruns the same seeded dataset with a different matcher configuration.
           </p>
-          {backendNote && (
-            <p className="mt-1 text-xs text-muted-foreground/80">{backendNote}</p>
-          )}
+          {backendNote && <p className="mt-1 text-xs text-muted-foreground/80">{backendNote}</p>}
         </header>
 
         <div className="h-64 w-full">
