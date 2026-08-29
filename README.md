@@ -100,6 +100,13 @@ uv run python -m engine.cli run --mode rules_agent --seeds 42 --n 100 \
   --report-out reports/run_42.json --publish
 ```
 
+By default the bounded agent runs against the offline `HeuristicLLMClient` —
+deterministic, network-free, and what CI uses. To measure against a real
+model instead, set `ANTHROPIC_API_KEY` before the `run` command; the engine
+picks it up automatically and records which backend actually ran in
+`config.agent_backend` on the published report, so a reviewer never has to
+guess.
+
 ### 4.3 Evaluate against holdout seeds
 ```bash
 # 20 seeds the system was never tuned against
@@ -135,11 +142,16 @@ bash scripts/checks/all.sh   # every phase's check script, P0 through P13
 | Metric | Value |
 |---|---|
 | Candidate blocker recall | 1.0000 (100%, over a candidate space $\lvert C\rvert < n^2/4$) |
-| Rules-only match rate | ~74.2% (zero LLM cost) |
-| Rules + bounded agent match rate | ~84.6% (positive `agent_lift`) |
-| Bank–payout link precision | > 98.5% |
+| Rules-only match rate | 70.2% mean, stdev 0.0151 (zero LLM cost) |
+| Rules + bounded agent match rate | 70.2% mean — **no lift on this exact metric today** (see note below) |
+| Bank–payout link recall, rules-only → rules+agent | 75.7% → 81.1% (genuine `+5.5pt` lift on the link-level metric) |
+| Bank–payout link precision, rules-only → rules+agent | 100.0% → 98.1% (`precision_cost` of accepting the agent's residual matches) |
 | Negative controls verified falsifiable | 6 / 6 |
-| Worst-case holdout minimum (gate value) | 71.00% (seed 101) |
+| Worst-case holdout minimum (gate value) | 67.00% (seed 114) |
+
+**Why `match_rate` and bank–payout recall disagree:** `match_rate` requires an *exact* 3-way match — bank, payout, **and** ledger lines all correct against the recorded truth group. The bounded agent (in either the offline heuristic backend or a live model, as currently prompted) only ever proposes a bank↔payout pair — it never proposes `ledger_ids` — so a residual it correctly resolves still can't register as an exact match on this strict metric, even though it's a real, verified improvement in bank–payout linking. This is measured and reproducible (`uv run python -m engine.eval.sweep --seeds 101-120`, `uv run python -m engine.eval.ablation --seeds 101-120`), not an estimate. Extending the agent's `propose_match` tool to also resolve the ledger side is the natural next step to move that lift into the headline `match_rate` number — tracked as a known limitation, not silently smoothed over.
+
+Every number above is produced by the code as shipped — including the four ablation arms, which are now *actually rerun* per seed rather than partially hardcoded (see [`CHANGELOG.md`](CHANGELOG.md) for the remediation this replaced). Which LLM backend produced the `agent_only`/`rules_agent` numbers in any given report is always recorded verbatim in `config.agent_backend` (`"live"`, `"heuristic"`, or `"none"`) — set `ANTHROPIC_API_KEY` to measure against a real model instead of the offline simulator.
 
 ## 6. Documentation
 
