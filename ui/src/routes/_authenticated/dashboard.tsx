@@ -111,7 +111,8 @@ function SeedBadge({ report }: { report: ReconciliationReport }) {
 }
 
 function DashboardBody({ report }: { report: ReconciliationReport }) {
-  const { accuracy, throughput, cost, candidate_space, ablation, resolved, unresolved } = report;
+  const { accuracy, throughput, cost, candidate_space, ablation, resolved, unresolved, config } =
+    report;
   const unresolvedCount = unresolvedTotal(unresolved);
   const replay = throughput.measurement_mode === "replay";
 
@@ -209,7 +210,7 @@ function DashboardBody({ report }: { report: ReconciliationReport }) {
 
       <VocabularyBars resolved={resolved} unresolved={unresolved} />
 
-      <AblationPanel ablation={ablation} />
+      <AblationPanel ablation={ablation} agentBackend={config.agent_backend} />
     </div>
   );
 }
