@@ -52,8 +52,8 @@
     },
     "Config": {
       "type": "object",
-      "required": ["seed", "seed_set", "n", "mode", "model", "temperature", "prompt_hash",
-                    "max_turns", "concurrency", "tolerances", "guardrail"],
+      "required": ["seed", "seed_set", "n", "mode", "model", "agent_backend", "temperature",
+                    "prompt_hash", "max_turns", "concurrency", "tolerances", "guardrail"],
       "additionalProperties": false,
       "properties": {
         "seed": { "type": "integer" },
@@ -64,6 +64,11 @@
           "enum": ["rules_only", "agent_only", "rules_agent", "random"]
         },
         "model": { "type": "string" },
+        "agent_backend": {
+          "type": "string",
+          "enum": ["live", "heuristic", "none"],
+          "description": "Which LLM backend actually produced this run's agent numbers: a live Anthropic call, the offline heuristic simulator, or none (mode never invoked an agent). Never omitted, never silently swapped."
+        },
         "temperature": { "type": "number" },
         "prompt_hash": { "type": "string", "pattern": "^sha256:" },
         "max_turns": { "type": "integer", "minimum": 1 },
@@ -334,11 +339,12 @@
         },
         "random_matcher": {
           "type": "object",
-          "required": ["passed", "observed_precision"],
+          "required": ["passed", "observed_precision", "observed_match_rate"],
           "additionalProperties": false,
           "properties": {
             "passed": { "type": "boolean" },
-            "observed_precision": { "type": "number" }
+            "observed_precision": { "type": "number" },
+            "observed_match_rate": { "type": "number" }
           }
         },
         "poisoned_prompt": {
