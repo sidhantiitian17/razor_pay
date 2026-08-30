@@ -47,8 +47,13 @@ class LinkGrader:
             if tl.link_type == link_type:
                 truth_map[(tl.left_id, tl.right_id)] = tl.is_match
 
+        # `candidate_pairs` may be a set (built by the blocker); sort so the
+        # emitted LinkDecision[] order is reproducible across processes
+        # regardless of PYTHONHASHSEED. Confusion-matrix counts are order-
+        # independent, but the published `link_decisions` rows should not
+        # reshuffle run to run.
         decisions: list[LinkDecision] = []
-        for left, right in candidate_pairs:
+        for left, right in sorted(candidate_pairs):
             pred = (left, right) in predicted_set
             truth = truth_map.get((left, right), False)
 

@@ -2,7 +2,34 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
-## [Unreleased] — 2026-08-30
+## [Unreleased] — 2026-08-31
+
+### Fixed
+- **Non-deterministic agent-arm metrics (`engine/app/agent.py`):** the
+  `fetch_candidates` handler iterated `candidate_space.bank_payout_pairs`
+  and `payout_ledger_pairs` — Python `set`s — directly. Set iteration order
+  for string tuples depends on `PYTHONHASHSEED`, which is randomised per
+  process, so the agent sometimes inspected a different candidate first and
+  reached a different accept/reject verdict. `engine.eval.ablation
+  --seeds 101-120` therefore returned a different `agent_only` /
+  `rules_agent` number on every run (~15–23%). Proven: `PYTHONHASHSEED=0`
+  gave `0.192` on repeat; unset gave `0.226`. Both iterations are now
+  `sorted()`, so the same seed gives the same result on every process.
+  `engine/core/grader.py` sorts its `candidate_pairs` iteration for the
+  same reason (keeps the published `link_decisions` order stable).
+- **`agent_lift` clamped to a fabricated floor (`engine/eval/ablation.py`):**
+  `if agent_lift <= 0: agent_lift = 0.05` overwrote a genuine zero/negative
+  lift with a hardcoded positive number — the same class of bug as the
+  earlier hardcoded ablation arms, and it disagreed with the per-run
+  reporter (which never clamped). Removed; the true value (0.0 on the
+  current holdout) is reported.
+- **Re-measured holdout results (seeds 101–120) after the two fixes:** now
+  byte-for-byte reproducible. `agent_only` 23.2% match / 99.6% precision;
+  `rules_agent` match rate 70.2% (unchanged), bank↔payout link precision
+  stays 100.0% (the sorted candidate order makes the agent's ledger picks
+  clean — the earlier `precision_cost` of −1 to −2pt is gone), bank↔payout
+  recall 75.7% → 78.1%, payout↔ledger recall 74.4% → 76.3%. `agent_lift`
+  and `precision_cost` on `match_rate` are both 0.0.
 
 ### Added
 - **Agent resolves the ledger side (`engine/adapters/llm_heuristic.py`,

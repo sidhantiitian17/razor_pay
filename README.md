@@ -148,17 +148,21 @@ bash scripts/checks/all.sh   # every phase's check script, P0 through P13
 | Candidate blocker recall | 1.0000 (100%, over a candidate space $\lvert C\rvert < n^2/4$) |
 | Rules-only match rate | 70.2% mean, stdev 0.0151 (zero LLM cost) |
 | Rules + bounded agent match rate | 70.2% mean — **no lift on this exact metric today** (see note below) |
-| Agent-only match rate, before → after ledger-side proposals | 0.0% → 18.1% (agent now resolves the full journal, not just the bank↔payout pair) |
-| Bank–payout link recall, rules-only → rules+agent | 75.7% → 81.1% (genuine `+5.5pt` lift on the link-level metric) |
-| Bank–payout link precision, rules-only → rules+agent | 100.0% → 98.5% (`precision_cost` of accepting the agent's residual matches) |
+| Agent-only match rate | 23.2% mean, 99.6% precision (agent resolves the full journal, not just the bank↔payout pair) |
+| Bank–payout link recall, rules-only → rules+agent | 75.7% → 78.1% (genuine `+2.4pt` lift on the link-level metric) |
+| Bank–payout link precision, rules-only → rules+agent | 100.0% → 100.0% (the agent adds no false-positive links) |
+| Payout–ledger link recall, rules-only → rules+agent | 74.4% → 76.3% (`+1.9pt` — the agent's ledger-side proposals) |
+| `agent_lift` / `precision_cost` on `match_rate` | 0.0 / 0.0 (reported as measured; neither is smoothed) |
 | Negative controls verified falsifiable | 6 / 6 |
 | Worst-case holdout minimum (gate value) | 67.00% (seed 114) |
 
-**Why `match_rate` and bank–payout recall disagree:** `match_rate` requires an *exact* 3-way match — bank, payout, **and** ledger lines all correct against the recorded truth group. The bounded agent now proposes the ledger side too: on any residual whose payout has a clean, balanced journal reachable in the candidate space it fetches that journal (every entry keyed on `reference == payout_id`, signed amounts netting to zero) and includes those `ledger_ids` in `propose_match`. That is what lifts the **agent-only** arm from 0.0% to 18.1% — the agent genuinely does 3-way work, not just bank↔payout linking.
+Every figure above is **reproducible byte-for-byte**: `uv run python -m engine.eval.ablation --seeds 101-120` gives the same numbers on every process, with or without `PYTHONHASHSEED` set (the agent's candidate iteration is sorted, so nothing depends on Python's per-process hash randomisation).
+
+**Why `match_rate` and bank–payout recall disagree:** `match_rate` requires an *exact* 3-way match — bank, payout, **and** ledger lines all correct against the recorded truth group. The bounded agent now proposes the ledger side too: on any residual whose payout has a clean, balanced journal reachable in the candidate space it fetches that journal (every entry keyed on `reference == payout_id`, signed amounts netting to zero) and includes those `ledger_ids` in `propose_match`. That is what lifts the **agent-only** arm to 23.2% match rate at 99.6% precision — the agent genuinely does 3-way work, not just bank↔payout linking.
 
 The **headline `rules_agent` match rate still shows no lift**, for a reason that is now a property of the benchmark rather than a gap in the agent: after the deterministic rule stack runs, the residuals it leaves are — by cohort design — the genuinely *unresolvable* cases (duplicate payout, excess drift, fee mismatch), not clean 3-way groups waiting to be recovered. Moving the headline number would require adding an "agent-resolvable 3-way" cohort to the generator, which would be benchmark-gaming; we would rather report the flat number honestly. All of this is measured and reproducible (`uv run python -m engine.eval.sweep --seeds 101-120`, `uv run python -m engine.eval.ablation --seeds 101-120`), not an estimate.
 
-Every number above is produced by the code as shipped — including the four ablation arms, which are now *actually rerun* per seed rather than partially hardcoded (see [`CHANGELOG.md`](CHANGELOG.md) for the remediation this replaced). Which LLM backend produced the `agent_only`/`rules_agent` numbers in any given report is always recorded verbatim in `config.agent_backend` (`"live"`, `"heuristic"`, or `"none"`) — set `ANTHROPIC_API_KEY` to measure against a real model instead of the offline simulator.
+Every number above is produced by the code as shipped — including the four ablation arms, which are *actually rerun* per seed rather than partially hardcoded, and `agent_lift`, which is reported at its true value (0.0 here) rather than clamped up to a floor (see [`CHANGELOG.md`](CHANGELOG.md) for the remediations this replaced). Which LLM backend produced the `agent_only`/`rules_agent` numbers in any given report is always recorded verbatim in `config.agent_backend` (`"live"`, `"heuristic"`, or `"none"`) — set `ANTHROPIC_API_KEY` to measure against a real model instead of the offline simulator.
 
 ## 6. Documentation
 

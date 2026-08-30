@@ -1,6 +1,7 @@
 """Tests for golden report regression and replay stability (§4.4, check 5.10)."""
 
 import json
+import os
 
 from engine.app.reporter import ReportGenerator
 from engine.core.generator.build import generate_dataset
@@ -239,3 +240,41 @@ def test_agent_backend_disclosed_and_never_silently_swapped() -> None:
     config2 = agent_report["config"]
     assert isinstance(config2, dict)
     assert config2["agent_backend"] in ("live", "heuristic")
+
+
+def test_agent_arm_is_deterministic_across_hash_seeds() -> None:
+    """Regression: the agent path must give the same number on every process.
+
+    `fetch_candidates` used to iterate `candidate_space` sets directly, whose
+    order for string tuples depends on PYTHONHASHSEED (randomised per
+    process). That made `agent_only` / `rules_agent` match_rate wander run to
+    run. Run the same seed in fresh subprocesses with different explicit hash
+    seeds and require an identical result.
+    """
+    import subprocess
+    import sys
+
+    snippet = (
+        "from engine.core.generator.build import generate_dataset;"
+        "from engine.app.reporter import ReportGenerator;"
+        "r=ReportGenerator().generate_report("
+        "dataset=generate_dataset(n=100,seed=114),mode='agent_only',seed=114,"
+        "seed_set='holdout',seeds=[114],fast=True);"
+        "print(r['accuracy']['match_rate']['value'])"
+    )
+
+    results = []
+    for hashseed in ("0", "1", "random"):
+        env = {**os.environ, "PYTHONHASHSEED": hashseed}
+        out = subprocess.run(
+            [sys.executable, "-c", snippet],
+            capture_output=True,
+            text=True,
+            env=env,
+            check=True,
+        )
+        results.append(out.stdout.strip())
+
+    assert len(set(results)) == 1, (
+        f"agent_only match_rate differs across PYTHONHASHSEED values: {results}"
+    )
