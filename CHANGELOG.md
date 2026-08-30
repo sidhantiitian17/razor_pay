@@ -2,9 +2,28 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
-## [Unreleased] — Open-source hygiene — 2026-08-30
+## [Unreleased] — 2026-08-30
 
 ### Added
+- **Agent resolves the ledger side (`engine/adapters/llm_heuristic.py`,
+  `engine/app/agent.py`):** `propose_match` already accepted `ledger_ids`,
+  but the heuristic client always sent `[]`. It now fetches the payout's
+  ledger candidates as a distinct tool turn and fills `ledger_ids` only
+  with a journal it can verify truth-free — every entry keyed on
+  `reference == payout_id`, signed amounts netting to zero, one line equal
+  to the payout net. Unverifiable journals still propose `[]` rather than
+  guess. `fetch_candidates` now returns each ledger candidate's `reference`
+  and `amount_paise` so that check is possible.
+  - Effect on holdout seeds 101–120: `agent_only` match rate **0.0% →
+    18.1%** (the agent now genuinely does 3-way work). The headline
+    `rules_agent` match rate is unchanged — the post-rules residual pool is
+    the genuinely unresolvable exception cohorts by design; see README §5.
+- **`engine.cli run --fast`:** skips the ~4x per-run ablation recompute.
+  The report then carries `"ablation": null` — an honest "not computed",
+  never fabricated arms. `contracts/report.schema.json` now allows
+  `ablation` to be the `Ablation` object **or** `null`; `report.d.ts`
+  regenerated in the same commit. The UI ablation panel renders a
+  "skipped (--fast)" state for a null block.
 - **`LICENSE` (MIT)** at the repo root; `pyproject.toml` now declares
   `license = { file = "LICENSE" }` and the README carries a License section.
 

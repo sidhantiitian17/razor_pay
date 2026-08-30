@@ -20,7 +20,10 @@ export interface ReconciliationReport {
   throughput: Throughput;
   cost: Cost;
   accuracy: Accuracy;
-  ablation: Ablation;
+  /**
+   * Full 4-arm ablation, or null when the run was executed with --fast (companion arms deliberately not computed).
+   */
+  ablation: Ablation | null;
   resolved: ResolvedMap;
   unresolved: UnresolvedMap;
   exceptions: ExceptionEntry[];

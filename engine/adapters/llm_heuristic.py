@@ -86,10 +86,21 @@ class HeuristicLLMClient:
                 latency_ms=25,
             )
 
-        # 2. Tool response: fetch_candidates -> turn 2: inspect candidate record
+        # 2. Tool response: fetch_candidates.
+        #    - First fetch (bank-side residual) returns payout candidates ->
+        #      inspect the candidate payout.
+        #    - Second fetch (keyed by payout_id) returns ledger candidates ->
+        #      everything needed for a full 3-way proposal is now on the
+        #      transcript, including the ledger journal.
         if role == "tool" and last_msg.get("name") == "fetch_candidates":
             data = self._parse_content(last_msg.get("content", "{}"))
             candidates = data.get("candidates", []) if isinstance(data, dict) else []
+            has_ledger = bool(
+                candidates and isinstance(candidates[0], dict) and candidates[0].get("ledger_id")
+            )
+
+            if has_ledger:
+                return self._propose(messages, candidates)
 
             if candidates and isinstance(candidates[0], dict):
                 cand = candidates[0]
@@ -105,101 +116,32 @@ class HeuristicLLMClient:
                 latency_ms=30,
             )
 
-        # 3. Tool response: inspect_record -> turn 3: propose match
+        # 3. Tool response: inspect_record (the candidate payout) -> fetch that
+        #    payout's ledger candidates before proposing, so the proposal can
+        #    carry the resolved ledger side and register as an exact 3-way
+        #    match rather than a bank<->payout-only link.
         if role == "tool" and last_msg.get("name") == "inspect_record":
             rec_data = self._parse_content(last_msg.get("content", "{}"))
+            payout_id_for_ledger = ""
+            if isinstance(rec_data, dict) and rec_data.get("payout_id"):
+                payout_id_for_ledger = str(rec_data["payout_id"])
 
-            # Derive the actual bank/payout pair from the assistant's own
-            # earlier tool_use turns (agent.py records these as
-            # {"role": "assistant", "tool_calls": [...]}). Previously this
-            # loop looked for an "arguments" key directly on each message —
-            # a key that never existed at that level — so it always fell
-            # through to a hardcoded literal ID that never matched a real
-            # generated record, and every proposal was rejected by the
-            # guardrail as hallucinated_id. Scanning each turn's tool_calls
-            # is what actually recovers the row being resolved.
-            bank_id = ""
-            payout_id = ""
-            for m in messages:
-                if not isinstance(m, dict):
-                    continue
-                tool_calls_raw = m.get("tool_calls")
-                tool_calls_list = tool_calls_raw if isinstance(tool_calls_raw, list) else []
-                for tc in tool_calls_list:
-                    if not isinstance(tc, dict):
-                        continue
-                    args = tc.get("arguments", {})
-                    if isinstance(args, dict):
-                        if args.get("bank_id"):
-                            bank_id = str(args["bank_id"])
-                        if args.get("payout_id"):
-                            payout_id = str(args["payout_id"])
-                # Also recover the candidate the fetch_candidates tool
-                # actually returned, in case the model only supplied the
-                # opposite side of the pair itself.
-                if m.get("role") == "tool" and m.get("name") == "fetch_candidates":
-                    data = self._parse_content(m.get("content", "{}"))
-                    candidates = data.get("candidates", []) if isinstance(data, dict) else []
-                    if candidates and isinstance(candidates[0], dict):
-                        cand = candidates[0]
-                        if not payout_id and cand.get("payout_id"):
-                            payout_id = str(cand["payout_id"])
-                        if not bank_id and cand.get("ledger_id"):
-                            # payout-side residual inspecting a ledger candidate;
-                            # bank_id stays empty (out of scope for this arm).
-                            pass
-
-            if not bank_id or not payout_id:
-                # No genuine candidate pair was recoverable from this
-                # transcript (e.g. an isolated residual with no candidates
-                # in range) — propose nothing rather than guess, so the
-                # guardrail sees an honest empty proposal instead of a
-                # fabricated ID.
+            if payout_id_for_ledger:
                 return LLMResponse(
                     tool_calls=[
                         {
-                            "name": "propose_match",
-                            "arguments": {
-                                "bank_id": bank_id or "",
-                                "payout_id": payout_id or "",
-                                "ledger_ids": [],
-                                "confidence": 0.0,
-                                "fields_matched": [],
-                                "reason": "No candidate pair recovered from transcript",
-                            },
+                            "name": "fetch_candidates",
+                            "arguments": {"payout_id": payout_id_for_ledger},
                         }
                     ],
                     content=None,
-                    usage=self._calc_usage(tokens_in=480, tokens_out=90),
-                    latency_ms=32,
+                    usage=self._calc_usage(tokens_in=470, tokens_out=60),
+                    latency_ms=28,
                 )
 
-            fields = ["amount", "date"]
-            confidence = 0.85
-            if isinstance(rec_data, dict) and rec_data.get("utr"):
-                fields.append("utr")
-                confidence = 0.95
-
-            tool_calls = [
-                {
-                    "name": "propose_match",
-                    "arguments": {
-                        "bank_id": bank_id,
-                        "payout_id": payout_id,
-                        "ledger_ids": [],
-                        "confidence": confidence,
-                        "fields_matched": fields,
-                        "reason": f"Agent verified match on {', '.join(fields)}",
-                    },
-                }
-            ]
-
-            return LLMResponse(
-                tool_calls=tool_calls,
-                content=None,
-                usage=self._calc_usage(tokens_in=520, tokens_out=110),
-                latency_ms=35,
-            )
+            # Inspected record was not a payout (no ledger side reachable) —
+            # propose from whatever pair the transcript already yields.
+            return self._propose(messages, [])
 
         # Default terminal
         return LLMResponse(
@@ -207,4 +149,125 @@ class HeuristicLLMClient:
             content=None,
             usage=self._calc_usage(tokens_in=200, tokens_out=20),
             latency_ms=10,
+        )
+
+    def _recover_pair(self, messages: list[dict[str, Any]]) -> tuple[str, str, dict[str, Any]]:
+        """Recover (bank_id, payout_id, payout_fields) from the transcript.
+
+        The bank/payout pair is read from the assistant's own recorded
+        tool_use turns and the fetch_candidates results — never guessed.
+        `payout_fields` is the inspect_record payload for that payout, used
+        downstream only for a real amount cross-check on the ledger journal.
+        """
+        bank_id = ""
+        payout_id = ""
+        payout_fields: dict[str, Any] = {}
+        for m in messages:
+            if not isinstance(m, dict):
+                continue
+            tc_raw = m.get("tool_calls")
+            for tc in tc_raw if isinstance(tc_raw, list) else []:
+                if not isinstance(tc, dict):
+                    continue
+                args = tc.get("arguments", {})
+                if isinstance(args, dict):
+                    if args.get("bank_id"):
+                        bank_id = str(args["bank_id"])
+                    if args.get("payout_id"):
+                        payout_id = str(args["payout_id"])
+            if m.get("role") == "tool" and m.get("name") == "fetch_candidates":
+                data = self._parse_content(m.get("content", "{}"))
+                cands = data.get("candidates", []) if isinstance(data, dict) else []
+                first = cands[0] if cands and isinstance(cands[0], dict) else {}
+                if not payout_id and first.get("payout_id"):
+                    payout_id = str(first["payout_id"])
+            if m.get("role") == "tool" and m.get("name") == "inspect_record":
+                info = self._parse_content(m.get("content", "{}"))
+                if isinstance(info, dict) and info.get("payout_id"):
+                    payout_fields = info
+                    if not payout_id:
+                        payout_id = str(info["payout_id"])
+        return bank_id, payout_id, payout_fields
+
+    def _verified_journal(
+        self, ledger_candidates: list[Any], payout_id: str, payout_fields: dict[str, Any]
+    ) -> list[str]:
+        """Return the ledger journal for `payout_id` iff it verifies, else [].
+
+        Genuine, truth-free checks: every entry must carry `reference ==
+        payout_id`, the signed amounts must net to zero (a balanced journal),
+        and — when the payout's own figures are on the transcript — one line
+        must equal the payout net. Nothing here consults ground truth.
+        """
+        journal = [
+            c
+            for c in ledger_candidates
+            if isinstance(c, dict)
+            and str(c.get("reference", "")) == payout_id
+            and c.get("ledger_id")
+        ]
+        if not journal:
+            return []
+        try:
+            amounts = [int(c["amount_paise"]) for c in journal if "amount_paise" in c]
+        except (TypeError, ValueError):
+            return []
+        if len(amounts) != len(journal) or sum(amounts) != 0:
+            return []
+        net = payout_fields.get("net_paise")
+        if isinstance(net, int) and not any(a == net for a in amounts):
+            return []
+        return [str(c["ledger_id"]) for c in journal]
+
+    def _propose(self, messages: list[dict[str, Any]], ledger_candidates: list[Any]) -> LLMResponse:
+        """Emit the terminal propose_match call from the recovered transcript."""
+        bank_id, payout_id, payout_fields = self._recover_pair(messages)
+
+        if not bank_id or not payout_id:
+            return LLMResponse(
+                tool_calls=[
+                    {
+                        "name": "propose_match",
+                        "arguments": {
+                            "bank_id": bank_id or "",
+                            "payout_id": payout_id or "",
+                            "ledger_ids": [],
+                            "confidence": 0.0,
+                            "fields_matched": [],
+                            "reason": "No candidate pair recovered from transcript",
+                        },
+                    }
+                ],
+                content=None,
+                usage=self._calc_usage(tokens_in=480, tokens_out=90),
+                latency_ms=32,
+            )
+
+        fields = ["amount", "date"]
+        confidence = 0.85
+        if payout_fields.get("utr"):
+            fields.append("utr")
+            confidence = 0.95
+
+        ledger_ids = self._verified_journal(ledger_candidates, payout_id, payout_fields)
+        if ledger_ids:
+            fields.append("ledger_journal")
+
+        return LLMResponse(
+            tool_calls=[
+                {
+                    "name": "propose_match",
+                    "arguments": {
+                        "bank_id": bank_id,
+                        "payout_id": payout_id,
+                        "ledger_ids": ledger_ids,
+                        "confidence": confidence,
+                        "fields_matched": fields,
+                        "reason": f"Agent verified match on {', '.join(fields)}",
+                    },
+                }
+            ],
+            content=None,
+            usage=self._calc_usage(tokens_in=520, tokens_out=110),
+            latency_ms=35,
         )

@@ -92,6 +92,7 @@ class ReportGenerator:
         seeds: list[int] | None = None,
         dry_run: bool = False,
         llm_client: LLMClient | None = None,
+        fast: bool = False,
         _include_ablation: bool = True,
     ) -> dict[str, object]:
         """Generate a complete reconciliation report adhering to report.schema.json.
@@ -104,6 +105,12 @@ class ReportGenerator:
         companion call, since only its accuracy/cost figures are read. This
         mirrors the same "rerun per mode" cost `engine.eval.ablation` already
         pays for the standalone sweep; nothing here is estimated or hardcoded.
+
+        `fast=True` skips those three companion reruns entirely and emits
+        `ablation: null` — an honest "not computed", never fabricated arms.
+        Use it for interactive/demo runs where the ~4x ablation cost is not
+        wanted; the standalone `engine.eval.ablation` harness stays the way
+        to get the full 4-arm breakdown.
         """
         wall_clock_start = time.perf_counter()
         run_id = str(uuid.uuid4())
@@ -375,7 +382,7 @@ class ReportGenerator:
         arm_metrics: dict[str, tuple[float, float, float]] = {
             mode: (match_rate_val, bp_p_val, cost_usd)
         }
-        if _include_ablation:
+        if _include_ablation and not fast:
             for other_mode in ("rules_only", "agent_only", "rules_agent"):
                 if other_mode == mode:
                     continue
@@ -398,10 +405,10 @@ class ReportGenerator:
                     float(c_cost["cost_usd"]),
                 )
         else:
-            # This IS a companion call — its own ablation block is never
-            # read by the caller (only accuracy/cost are), so fill the
-            # remaining arms with cheap, schema-valid placeholders rather
-            # than recursing further.
+            # Either a companion call (its ablation block is never read) or a
+            # fast run (ablation is emitted as null below). Fill the remaining
+            # arms with cheap placeholders rather than recursing further —
+            # they are not surfaced in either case.
             for other_mode in ("rules_only", "agent_only", "rules_agent"):
                 arm_metrics.setdefault(other_mode, (0.0, 0.0, 0.0))
 
@@ -417,6 +424,39 @@ class ReportGenerator:
 
         lift_val = round(rules_agent_mr - rules_only_mr, 4)
         prec_cost_val = round(rules_agent_p - rules_only_p, 4)
+
+        ablation_block: dict[str, object] | None
+        if fast:
+            ablation_block = None
+        else:
+            ablation_block = {
+                "rules_only": {
+                    "match_rate": rules_only_mr,
+                    "precision": rules_only_p,
+                    "cost_usd": rules_only_cost,
+                },
+                "agent_only": {
+                    "match_rate": agent_only_mr,
+                    "precision": agent_only_p,
+                    "cost_usd": agent_only_cost,
+                },
+                "rules_agent": {
+                    "match_rate": rules_agent_mr,
+                    "precision": rules_agent_p,
+                    "cost_usd": rules_agent_cost,
+                },
+                "random": {
+                    "match_rate": random_mr,
+                    "precision": random_p,
+                    "cost_usd": 0.0,
+                },
+                "agent_lift": MetricValue(
+                    value=lift_val,
+                    numerator=round(lift_val * 10000),
+                    denominator=10000,
+                ).to_dict(),
+                "precision_cost": prec_cost_val,
+            }
 
         # Store artifacts on self for publisher and crosscheck
         self.last_match_groups = list(matched_groups)
@@ -504,34 +544,7 @@ class ReportGenerator:
                     },
                 },
             },
-            "ablation": {
-                "rules_only": {
-                    "match_rate": rules_only_mr,
-                    "precision": rules_only_p,
-                    "cost_usd": rules_only_cost,
-                },
-                "agent_only": {
-                    "match_rate": agent_only_mr,
-                    "precision": agent_only_p,
-                    "cost_usd": agent_only_cost,
-                },
-                "rules_agent": {
-                    "match_rate": rules_agent_mr,
-                    "precision": rules_agent_p,
-                    "cost_usd": rules_agent_cost,
-                },
-                "random": {
-                    "match_rate": random_mr,
-                    "precision": random_p,
-                    "cost_usd": 0.0,
-                },
-                "agent_lift": MetricValue(
-                    value=lift_val,
-                    numerator=round(lift_val * 10000),
-                    denominator=10000,
-                ).to_dict(),
-                "precision_cost": prec_cost_val,
-            },
+            "ablation": ablation_block,
             "resolved": resolved_counts,
             "unresolved": unresolved_counts,
             "exceptions": serialized_exceptions,

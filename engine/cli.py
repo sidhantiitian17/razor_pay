@@ -98,6 +98,12 @@ def _resolve_storage_adapter(db: str) -> StoragePort:
 )
 @click.option("--publish", is_flag=True, default=False, help="Publish results to storage")
 @click.option(
+    "--fast",
+    is_flag=True,
+    default=False,
+    help="Skip the ~4x per-run ablation recompute; report emits ablation: null (not faked)",
+)
+@click.option(
     "--db",
     default="data/reconciliation.db",
     help="Database target (SQLite path or 'supabase')",
@@ -108,6 +114,7 @@ def run(
     n: int,
     report_out: Path,
     publish: bool,
+    fast: bool = False,
     db: str = "data/reconciliation.db",
 ) -> None:
     """Run the reconciliation pipeline."""
@@ -115,7 +122,8 @@ def run(
 
     seed_list = _parse_seeds(seeds)
     typed_mode = cast("Literal['rules_only', 'agent_only', 'rules_agent', 'random']", mode)
-    click.echo(f"Running mode={mode} across {len(seed_list)} seed(s)...")
+    fast_note = " (fast: ablation skipped)" if fast else ""
+    click.echo(f"Running mode={mode} across {len(seed_list)} seed(s){fast_note}...")
 
     from engine.app.reporter import ReportGenerator
 
@@ -136,6 +144,7 @@ def run(
             seed=s,
             seed_set=typed_seed_set,
             seeds=seed_list,
+            fast=fast,
         )
 
         if first_report is None:
