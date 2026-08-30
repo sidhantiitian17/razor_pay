@@ -107,11 +107,13 @@ Institutional 3-way financial reconciliation engine (Bank Statement <-> Gateway 
   - `engine/adapters/llm_heuristic.py` — a deterministic offline simulator used for tests, CI, and any environment with no API key.
 - `engine/adapters/select.py::select_llm_client()` picks the backend: live Anthropic when `ANTHROPIC_API_KEY` is set **and** the `anthropic` package is installed, otherwise the heuristic simulator. It returns `(client, backend_name)`; the caller records `backend_name` verbatim in `config.agent_backend` on every published report (`"none" | "heuristic" | "live"`). The selection is never silent — a reviewer reading a report always knows whether "agent" numbers came from a real model.
 - `agent.py` threads each turn's assistant `tool_use` blocks (with stable `toolu_*` ids) plus the paired `tool_result` back into the message history, so a live model reconstructs a schema-valid multi-turn transcript. The heuristic/mock clients only read the message tail and are unaffected.
+- **Ledger-side resolution.** `propose_match` takes `bank_id`, `payout_id` **and** `ledger_ids`. The heuristic client fetches the payout's ledger candidates as a distinct turn and only fills `ledger_ids` with a journal it can verify truth-free: every entry keyed on `reference == payout_id`, signed amounts netting to zero, and (when the payout figures are on the transcript) one line equal to the payout net. When it cannot verify a journal it proposes `ledger_ids: []` rather than guess. This lets an agent-resolved residual register as an exact 3-way match and lifts the `agent_only` ablation arm materially. The headline `rules_agent` match rate is unchanged because the post-rules residual pool is, by cohort design, the genuinely unresolvable exception cases — see README §5.
 
 ### 2.7 Genuine Per-Run Ablation
 - `engine/app/reporter.py::generate_report()` populates the `ablation` block by genuinely re-running the other rule/agent arms on the same dataset/seed (companion calls with `_include_ablation=False` to bound recursion). No arm is a hardcoded constant.
 - The `random` arm is sourced from the real random matcher in `engine/eval/controls.py`.
 - `engine/eval/sweep.py` and `engine/eval/ablation.py` opt out of this in-report recomputation (they already do their own multi-mode reruns), so the standalone sweep cost is unchanged. A single `engine.cli run` now does ~3-4x the pipeline work it used to.
+- `generate_report(fast=True)` (CLI `run --fast`) skips the companion arm reruns entirely and emits `ablation: null` — an honest "not computed", never fabricated arms. The schema (`contracts/report.schema.json`) allows `ablation` to be the full object or `null`; the standalone `engine.eval.ablation` harness remains the way to get the 4-arm breakdown.
 
 ---
 

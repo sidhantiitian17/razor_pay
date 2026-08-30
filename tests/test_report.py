@@ -113,3 +113,38 @@ def test_stage_seconds() -> None:
     # Assert within 5% of wall clock (or minimal duration)
     assert wall_clock > 0
     assert abs(total_stage_time - wall_clock) <= max(0.05 * wall_clock, 0.05)
+
+
+def test_fast_flag_emits_null_ablation_not_fabricated_arms() -> None:
+    """`--fast` skips the companion ablation reruns and emits ablation: null.
+
+    The value must be an honest null, never a block of zeroed/placeholder
+    arms, and the report must still validate against the frozen schema.
+    """
+    dataset = generate_dataset(n=60, seed=42)
+    generator = ReportGenerator()
+    report = generator.generate_report(
+        dataset=dataset,
+        mode="rules_agent",
+        seed=42,
+        seed_set="holdout",
+        seeds=[42],
+        fast=True,
+    )
+
+    assert report["ablation"] is None
+
+    schema = json.loads(Path("contracts/report.schema.json").read_text(encoding="utf-8"))
+    jsonschema.validate(instance=report, schema=schema)
+
+    # A non-fast run of the same dataset still produces a full 4-arm block.
+    full = generator.generate_report(
+        dataset=dataset,
+        mode="rules_agent",
+        seed=42,
+        seed_set="holdout",
+        seeds=[42],
+    )
+    ablation = full["ablation"]
+    assert isinstance(ablation, dict)
+    assert {"rules_only", "agent_only", "rules_agent", "random"}.issubset(ablation)

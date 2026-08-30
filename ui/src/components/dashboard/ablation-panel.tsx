@@ -34,9 +34,22 @@ export function AblationPanel({
   ablation,
   agentBackend,
 }: {
-  ablation: Ablation;
+  ablation: Ablation | null;
   agentBackend?: "live" | "heuristic" | "none";
 }) {
+  if (ablation === null) {
+    return (
+      <section className="panel p-4">
+        <h3 className="text-sm font-semibold text-foreground">Baselines — four ablation arms</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          This run was executed with <code className="tnum">--fast</code>: the three companion
+          ablation arms were deliberately not recomputed. Re-run without <code>--fast</code>, or use
+          the standalone <code>engine.eval.ablation</code> harness, for the full 4-arm breakdown.
+        </p>
+      </section>
+    );
+  }
+
   const rows = ARMS.map(({ key, label }) => ({
     label,
     "match rate %": ablation[key].match_rate * 100,

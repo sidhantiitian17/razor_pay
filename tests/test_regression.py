@@ -113,6 +113,66 @@ def test_heuristic_agent_derives_real_row_id_not_hardcoded_fallback() -> None:
     )
 
 
+def test_heuristic_agent_proposes_verified_ledger_journal() -> None:
+    """The agent must resolve the ledger side, not just bank<->payout.
+
+    On any residual whose payout has a clean, balanced journal reachable in
+    the candidate space, the accepted proposal must carry that journal's
+    ledger ids (every entry keyed on `reference == payout_id`, netting to
+    zero) — never an empty ledger list. This is what lets a residual the
+    agent resolves register as an exact 3-way match rather than a
+    bank<->payout-only link.
+    """
+    from engine.adapters.llm_heuristic import HeuristicLLMClient
+    from engine.app.agent import AgentRunner
+    from engine.core.generator.build import generate_dataset
+    from engine.core.guardrail import GuardrailConfig
+    from engine.core.matching.blocker import build_candidate_space
+    from engine.core.matching.rules import DeterministicMatcher
+
+    dataset = generate_dataset(n=100, seed=1)
+    space = build_candidate_space(
+        dataset.bank_txns, dataset.gateway_payouts, dataset.ledger_entries
+    )
+    matched = DeterministicMatcher().match(
+        dataset.bank_txns, dataset.gateway_payouts, dataset.ledger_entries
+    )
+    matched_bank_ids = {bid for mg in matched.matched_groups for bid in mg.bank_ids}
+    ledger_by_id = {e.ledger_id: e for e in dataset.ledger_entries}
+
+    runner = AgentRunner(
+        llm_client=HeuristicLLMClient(),
+        guardrail_config=GuardrailConfig(min_confidence=0.70, min_fields=2),
+        max_turns=6,
+    )
+
+    proposals_with_ledger = 0
+    for b in dataset.bank_txns:
+        if b.bank_id in matched_bank_ids:
+            continue
+        result = runner.resolve_residual(
+            row_id=b.bank_id,
+            bank_txns=dataset.bank_txns,
+            gateway_payouts=dataset.gateway_payouts,
+            ledger_entries=dataset.ledger_entries,
+            candidate_space=space,
+        )
+        group = result.proposed_group
+        if group is None or not group.ledger_ids:
+            continue
+        proposals_with_ledger += 1
+        payout_id = group.payout_ids[0]
+        entries = [ledger_by_id[lid] for lid in group.ledger_ids]
+        # Genuine, truth-free invariants the proposal must satisfy.
+        assert all(e.reference == payout_id for e in entries)
+        assert sum(e.amount_paise for e in entries) == 0
+        assert "ledger_journal" in group.fields_matched
+
+    assert proposals_with_ledger > 0, (
+        "agent never proposed any ledger ids — the ledger side is still unresolved"
+    )
+
+
 def test_ablation_arms_are_genuinely_recomputed_not_hardcoded() -> None:
     """Regression: every ablation arm must reflect this run's own dataset/seed.
 

@@ -20,7 +20,13 @@
     "throughput": { "$ref": "#/$defs/Throughput" },
     "cost": { "$ref": "#/$defs/Cost" },
     "accuracy": { "$ref": "#/$defs/Accuracy" },
-    "ablation": { "$ref": "#/$defs/Ablation" },
+    "ablation": {
+      "oneOf": [
+        { "$ref": "#/$defs/Ablation" },
+        { "type": "null" }
+      ],
+      "description": "Full 4-arm ablation, or null when the run was executed with --fast (companion arms deliberately not computed)."
+    },
     "resolved": { "$ref": "#/$defs/ResolvedMap" },
     "unresolved": { "$ref": "#/$defs/UnresolvedMap" },
     "exceptions": {

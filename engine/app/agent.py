@@ -228,7 +228,7 @@ class AgentRunner:
                     # Query candidate space
                     b_id = str(args.get("bank_id", ""))
                     p_id = str(args.get("payout_id", ""))
-                    candidates = []
+                    candidates: list[dict[str, object]] = []
                     if b_id:
                         for bp in candidate_space.bank_payout_pairs:
                             if bp[0] == b_id:
@@ -236,7 +236,12 @@ class AgentRunner:
                     if p_id:
                         for pl in candidate_space.payout_ledger_pairs:
                             if pl[0] == p_id:
-                                candidates.append({"ledger_id": pl[1]})
+                                led = ledger_by_id.get(pl[1])
+                                cand: dict[str, object] = {"ledger_id": pl[1]}
+                                if led is not None:
+                                    cand["reference"] = led.reference
+                                    cand["amount_paise"] = led.amount_paise
+                                candidates.append(cand)
 
                     messages.append(
                         {
