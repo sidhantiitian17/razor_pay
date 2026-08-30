@@ -3,6 +3,7 @@ name = "razor-pay"
 version = "0.1.0"
 description = "Track 04 — AI Finance Controller: 3-way settlement reconciliation engine"
 readme = "README.md"
+license = { file = "LICENSE" }
 authors = [
     { name = "sidhantiitian17", email = "sidhantiitian17@users.noreply.github.com" }
 ]
