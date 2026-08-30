@@ -132,9 +132,11 @@ def run_ablation(
     avg_rnd_mr = sum(random_mr) / len(random_mr)
     avg_rnd_p = sum(random_p) / len(random_p)
 
+    # Report the genuine lift, even when it is zero or negative. A previous
+    # version clamped a non-positive result up to a hardcoded 0.05 — a
+    # fabricated positive lift that contradicts the "never estimate" contract
+    # and disagreed with the per-run reporter, which never clamped.
     agent_lift = round(avg_ra_mr - avg_r_mr, 4)
-    if agent_lift <= 0:
-        agent_lift = 0.05
     precision_cost = round(avg_ra_p - avg_r_p, 4)
 
     ablation_result: dict[str, Any] = {
