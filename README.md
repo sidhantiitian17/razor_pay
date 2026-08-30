@@ -26,7 +26,7 @@ Done manually, this is slow, error-prone, and gets worse as volume grows. Done w
                                  ▼
                  ┌───────────────────────────────┐
                  │ 2. Deterministic rule stack     │  exact / fuzzy / pair
-                 │    (no LLM, ~74% match rate)    │  matching, zero cost
+                 │   (no LLM, 70.2% match rate)    │  matching, zero cost
                  └───────┬───────────────┬─────────┘
                          │               │
                   resolved matches   residual (unmatched)
@@ -163,7 +163,11 @@ Every number above is produced by the code as shipped — including the four abl
 - [`PROGRESS.md`](PROGRESS.md) · [`CHANGELOG.md`](CHANGELOG.md) — phase ledger and dated changelog.
 - [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) — master design spec and requirement atoms (R1–R10).
 
-## 7. Tech stack
+## 7. License
+
+MIT — see [`LICENSE`](LICENSE).
+
+## 8. Tech stack
 
 **Engine:** Python 3.13, Pydantic v2, pure-core matching (zero I/O, enforced by `import-linter`), SQLite / Supabase Postgres storage adapters, `uv` for dependency management.
 **Console:** TanStack Start + React 19, Tailwind v4 + shadcn/ui, Supabase Auth + Postgres (RLS as the real security boundary), GSAP/Lenis for scroll interaction, Framer Motion for reduced-motion-aware transitions, Recharts, Playwright for UI verification.

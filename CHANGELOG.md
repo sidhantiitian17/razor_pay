@@ -2,6 +2,18 @@
 
 All notable changes to this project are recorded here, one entry per merged phase.
 
+## [Unreleased] — Open-source hygiene — 2026-08-30
+
+### Added
+- **`LICENSE` (MIT)** at the repo root; `pyproject.toml` now declares
+  `license = { file = "LICENSE" }` and the README carries a License section.
+
+### Fixed
+- **Stale rules-only match-rate labels in docs:** the README §2 architecture
+  diagram said `~74%` and `docs/EVALUATION.md` said `~74–80%`; both now read
+  the real measured figure `70.2%` (mean, stdev 0.0151), matching the §5
+  metrics table.
+
 ## [Remediation-2] — Honest Agent Backend & Genuine Ablation — 2026-08-29
 
 ### Fixed

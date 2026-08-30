@@ -21,7 +21,7 @@ The system evaluates four distinct execution modes on identical datasets:
 
 1. **`rules_only` (Deterministic Baseline):**
    - Pure deterministic rule stack (Exact UTR, Narration regex recovery, Fee-aware pair matching, Duplicates).
-   - Expected match rate: ~74–80%.
+   - Expected match rate: ~70% (70.2% mean, stdev 0.0151; see README metrics table).
    - LLM cost: $0.00.
 
 2. **`agent_only`:**
