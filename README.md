@@ -4,6 +4,8 @@ An institutional 3-way settlement reconciliation engine (**Bank Statement ↔ Ga
 
 Money is strictly integer paise everywhere except the display layer. Every reported metric carries its explicit numerator, denominator, seed, and seed-set — no bare percentages.
 
+**Author:** Prashast Sidhant — [Resume (PDF)](docs/Prashast_Sidhant_Resume.pdf)
+
 ---
 
 ## 1. The problem
