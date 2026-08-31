@@ -77,6 +77,8 @@ The operator console (`ui/`) is a TanStack Start + Supabase app, gated behind re
 
 Live: **https://razorpay-settlement-sentinel.lovable.app**
 
+Demo video: **https://youtu.be/jZ_AN6GkX6A**
+
 ## 4. Setup
 
 Two independent halves — the reconciliation engine (Python) and the operator console (TypeScript). You don't need both to explore either one: the engine runs fully offline against a local SQLite file, and the console can point at the shared Supabase project below.
